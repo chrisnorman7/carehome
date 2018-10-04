@@ -4,6 +4,7 @@ from attr import attrs, attrib, Factory, asdict
 from .objects import Object
 from .property_types import PropertyTypes
 from .properties import Property
+from .methods import Method
 
 property_types = {member.value: member.name for member in PropertyTypes}
 
@@ -42,6 +43,21 @@ class Database:
         return Property(
             d['name'], d['description'],
             getattr(PropertyTypes, d['type']).value, d['value']
+        )
+
+    def dump_method(self, m):
+        """Dump a Method m as a dictionary."""
+        return asdict(
+            m, filter=lambda attribute, value: attribute.name not in (
+                'database', 'func'
+            )
+        )
+
+    def load_method(self, d):
+        """Load and return a Method instance from a dictionary d."""
+        return Method(
+            self, d['name'], d['description'], d['args'], d['imports'],
+            d['code']
         )
 
     def as_dict(self):

@@ -1,8 +1,9 @@
 """Test Database objects."""
 
+import re
 from datetime import datetime
 from pytest import raises
-from carehome import Database, Object, Property
+from carehome import Database, Object, Property, Method
 
 
 def test_create():
@@ -66,3 +67,41 @@ def test_load_property():
     assert p.value == value
     assert p.type is datetime
     assert p.description == desc
+
+
+def test_dump_method():
+    d = Database()
+    name = 'test'
+    description = 'Test method for dumping.'
+    args = ''
+    imports = []
+    code = 'return 1234'
+    m = Method(d, name, description, args, imports, code)
+    actual = d.dump_method(m)
+    expected = dict(
+        name=name, description=description, args=args, imports=imports,
+        code=code
+    )
+    assert actual == expected
+
+
+def test_load_method():
+    d = Database()
+    name = 'test'
+    description = 'This is a test function.'
+    args = 'a, b'
+    imports = ['import re']
+    code = 'return (a, b, re)'
+    m = d.load_method(
+        dict(
+            name=name, description=description, args=args, imports=imports,
+            code=code
+        )
+    )
+    assert m.database is d
+    assert m.name == name
+    assert m.description == description
+    assert m.args == args
+    assert m.imports == imports
+    assert m.code == code
+    assert m.func(1, 2) == (1, 2, re)
