@@ -5,6 +5,8 @@ from enum import Enum
 from attr import attrs, attrib, Factory
 from .exc import DuplicateParentError, ParentIsChildError
 
+NoneType = type(None)
+
 
 @attrs
 class _Base:
@@ -29,6 +31,10 @@ class Object(_Base):
     def __setattr__(self, name, value):
         if '__initialised__' not in self.__dict__:
             return super().__setattr__(name, value)
+        if name in ('__initialised__', 'id'):
+            raise RuntimeError(
+                'You cannot set this attribute after initialisation.'
+            )
         for property_name, property in self._properties.items():
             if property_name == name:
                 property.set(value)
@@ -152,6 +158,7 @@ class Object(_Base):
 class PropertyTypes(Enum):
     """The available property types."""
 
+    null = NoneType
     str = str
     float = float
     int = int

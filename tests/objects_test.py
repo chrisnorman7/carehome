@@ -117,3 +117,15 @@ def test_remove_method():
     assert callable(o.test)
     o.remove_method('test')
     assert not hasattr(o, 'test')
+
+
+def test_set_id():
+    o = db.create_object()
+    with raises(RuntimeError):
+        o.id = 2
+
+
+def test_set___initialised__():
+    o = db.create_object()
+    with raises(RuntimeError):
+        o.__initialised__ = None
