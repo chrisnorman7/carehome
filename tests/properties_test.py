@@ -4,11 +4,14 @@ from datetime import datetime
 from pytest import raises
 from carehome import Property
 
+name = 'test'
+
 
 def test_init():
     description = 'Test property.'
     value = datetime.utcnow()
-    p = Property(description, datetime, value)
+    p = Property(name, description, datetime, value)
+    assert p.name == name
     assert p.description == description
     assert p.type is datetime
     assert p.value == value
@@ -16,7 +19,7 @@ def test_init():
 
 def test_get():
     value = 'Test'
-    p = Property('Test property.', str, value)
+    p = Property(name, 'Test property.', str, value)
     assert p.get() is value
     value = 'Some other value.'
     p.value = value
@@ -25,7 +28,7 @@ def test_get():
 
 def test_set():
     value = 'Test value'
-    p = Property('Test property.', str, value)
+    p = Property(name, 'Test property.', str, value)
     with raises(TypeError):
         p.set(datetime.utcnow())
     assert p.value is value

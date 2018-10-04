@@ -7,6 +7,7 @@ from attr import attrs, attrib
 class Property:
     """A property on an Object instance."""
 
+    name = attrib()
     description = attrib()
     type = attrib()
     value = attrib()

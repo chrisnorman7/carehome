@@ -1,7 +1,11 @@
 """Provides the Database class."""
 
-from attr import attrs, attrib, Factory
+from attr import attrs, attrib, Factory, asdict
 from .objects import Object
+from .property_types import PropertyTypes
+from .properties import Property
+
+property_types = {member.value: member.name for member in PropertyTypes}
 
 
 @attrs
@@ -24,3 +28,32 @@ class Database:
         for parent in obj._parents:
             parent.remove_parent(obj)
         del self.objects[obj.id]
+
+    def dump_property(self, p):
+        """Return Property p as a dictionary."""
+        d = asdict(p)
+        d['type'] = property_types.get(d['type'], None)
+        if d['type'] is None:
+            raise RuntimeError('Invalid type on property %r.' % p)
+        return d
+
+    def load_property(self, d):
+        """Load and return a Property instance from a dictionary d."""
+        return Property(
+            d['name'], d['description'],
+            getattr(PropertyTypes, d['type']).value, d['value']
+        )
+
+    def as_dict(self):
+        """Generate a dictionary from this database which can be dumped using
+        YAML for example."""
+        d = dict(objects=[])
+        for obj in sorted(self.objects, lambda thing: thing.id):
+            parents = [parent.id for parent in obj.parents]
+            o = dict(parents=parents, id=obj.id)
+            properties = [
+                self.dump_property(p) for p in obj._properties.values()
+            ]
+            o['properties'] = properties
+            d['objects'].append(o)
+        return d

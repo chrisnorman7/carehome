@@ -119,7 +119,7 @@ class Object:
             raise TypeError('Invalid property type: %r.' % type)
         if not isinstance(value, type):
             raise TypeError('Value %r is not of type %r.' % (value, type))
-        p = Property(description, type, value)
+        p = Property(name, description, type, value)
         self._properties[name] = p
         return p
 

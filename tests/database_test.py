@@ -1,6 +1,8 @@
 """Test Database objects."""
 
-from carehome import Database, Object
+from datetime import datetime
+from pytest import raises
+from carehome import Database, Object, Property
 
 
 def test_create():
@@ -36,3 +38,31 @@ def test_destroy_object():
     assert o1.id == 1
     assert db.objects == {1: o1}
     assert db.max_id == 3
+
+
+def test_dump_property():
+    d = Database()
+    name = 'test'
+    desc = 'Test property.'
+    type = str
+    value = 'Test string.'
+    p = Property(name, desc, type, value)
+    actual = d.dump_property(p)
+    expected = dict(name=name, description=desc, value=value, type='str')
+    assert expected == actual
+    p.type = Exception
+    with raises(RuntimeError):
+        d.dump_property(p)
+
+
+def test_load_property():
+    d = Database()
+    name = 'test'
+    desc = 'Test date.'
+    value = datetime.utcnow()
+    p = d.load_property(
+        dict(name=name, type='datetime', value=value, description=desc)
+    )
+    assert p.value == value
+    assert p.type is datetime
+    assert p.description == desc
