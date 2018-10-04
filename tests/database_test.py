@@ -58,15 +58,17 @@ def test_dump_property():
 
 def test_load_property():
     d = Database()
+    o = d.create_object()
     name = 'test'
     desc = 'Test date.'
     value = datetime.utcnow()
     p = d.load_property(
-        dict(name=name, type='datetime', value=value, description=desc)
+        o, dict(name=name, type='datetime', value=value, description=desc)
     )
     assert p.value == value
     assert p.type is datetime
     assert p.description == desc
+    assert o._properties[p.name] is p
 
 
 def test_dump_method():
@@ -87,22 +89,26 @@ def test_dump_method():
 
 def test_load_method():
     d = Database()
+    o = d.create_object()
     name = 'test'
     description = 'This is a test function.'
     args = 'a, b'
     imports = ['import re']
     code = 'return (a, b, re)'
     m = d.load_method(
-        dict(
+        o, dict(
             name=name, description=description, args=args, imports=imports,
             code=code
         )
     )
+    assert isinstance(m, Method)
+    assert o._methods[name] is m
     assert m.database is d
     assert m.name == name
     assert m.description == description
     assert m.args == args
     assert m.imports == imports
+    code = 'self = objects[%d]\n%s' % (o.id, code)
     assert m.code == code
     assert m.func(1, 2) == (1, 2, re)
 
@@ -122,3 +128,37 @@ def test_dump_object():
         id=o.id, properties=[], methods=[], parents=[parent_1.id, parent_2.id]
     )
     assert actual == expected
+
+
+def test_load_object():
+    d = Database()
+    id = 18
+    parent_1 = d.create_object()
+    parent_2 = d.create_object()
+    p = Property('property', 'Test property.', bool, False)
+    m = Method(
+        d, 'method', 'Test method.', 'a, b', ['import re'],
+        'return (a, b, re)'
+    )
+    data = dict(
+        id=id, methods=[d.dump_method(m)], properties=[d.dump_property(p)],
+        parents=[]
+    )
+    o = d.load_object(data)
+    assert d.objects[id] is o
+    assert d.max_id == (id + 1)
+    assert len(o._methods) == 1
+    m.code = 'self = objects[%d]\n%s' % (id, m.code)
+    m.func = None
+    o._methods[m.name].func = None  # Otherwise they'll never match.
+    assert o._methods[m.name] == m
+    assert len(o._properties) == 1
+    assert o._properties[p.name] == p
+    assert not o._parents
+    assert not o._children
+    d.destroy_object(o)
+    data['parents'].extend([parent_1.id, parent_2.id])
+    o = d.load_object(data)
+    assert o._parents == [parent_1, parent_2]
+    assert parent_1._children == [o]
+    assert parent_2._children == [o]

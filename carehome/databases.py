@@ -3,8 +3,6 @@
 from attr import attrs, attrib, Factory, asdict
 from .objects import Object
 from .property_types import PropertyTypes
-from .properties import Property
-from .methods import Method
 
 property_types = {member.value: member.name for member in PropertyTypes}
 
@@ -20,9 +18,13 @@ class Database:
     def create_object(self):
         """Create an object that will be added to the dictionary of objects."""
         o = Object(self, id=self.max_id)
-        self.max_id += 1
-        self.objects[o.id] = o
+        self.register_object(o)
         return o
+
+    def register_object(self, o):
+        """Register an Object instance o with this database."""
+        self.max_id = max(o.id + 1, self.max_id)
+        self.objects[o.id] = o
 
     def destroy_object(self, obj):
         """Destroy an object obj."""
@@ -38,11 +40,12 @@ class Database:
             raise RuntimeError('Invalid type on property %r.' % p)
         return d
 
-    def load_property(self, d):
-        """Load and return a Property instance from a dictionary d."""
-        return Property(
-            d['name'], d['description'],
-            getattr(PropertyTypes, d['type']).value, d['value']
+    def load_property(self, obj, d):
+        """Load and return a Property instance bound to an Object instance obj,
+        from a dictionary d."""
+        return obj.add_property(
+            d['name'], getattr(PropertyTypes, d['type']).value, d['value'],
+            description=d['description']
         )
 
     def dump_method(self, m):
@@ -53,11 +56,12 @@ class Database:
             )
         )
 
-    def load_method(self, d):
-        """Load and return a Method instance from a dictionary d."""
-        return Method(
-            self, d['name'], d['description'], d['args'], d['imports'],
-            d['code']
+    def load_method(self, obj, d):
+        """Load and return a Method instance bound to Object instance obj, from
+        a dictionary d."""
+        return obj.add_method(
+            d['name'], d['code'], args=d['args'], imports=d['imports'],
+            description=d['description']
         )
 
     def dump_object(self, obj):
@@ -72,13 +76,15 @@ class Database:
 
     def load_object(self, d):
         """Load and return an Object instance from a dictionary d."""
-        o = Object(
-            self, id=d['id'],
-            properties=[self.load_property(p) for p in d['properties']],
-            methods=[self.load_method[m] for m in d['methods']]
-        )
+        o = Object(self, id=d['id'])
+        self.register_object(o)
+        for p in d['properties']:
+            self.load_property(o, p)
+        for m in d['methods']:
+            self.load_method(o, m)
         for parent in d['parents']:
             o.add_parent(self.objects[parent])
+        self.max_id = max(o.id + 1, self.max_id)
         return o
 
     def as_dict(self):
