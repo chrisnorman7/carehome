@@ -87,16 +87,10 @@ class Database:
         self.max_id = max(o.id + 1, self.max_id)
         return o
 
-    def as_dict(self):
+    def dump(self):
         """Generate a dictionary from this database which can be dumped using
         YAML for example."""
         d = dict(objects=[])
-        for obj in sorted(self.objects, lambda thing: thing.id):
-            parents = [parent.id for parent in obj.parents]
-            o = dict(parents=parents, id=obj.id)
-            properties = [
-                self.dump_property(p) for p in obj._properties.values()
-            ]
-            o['properties'] = properties
-            d['objects'].append(o)
+        for obj in sorted(self.objects.values(), key=lambda thing: thing.id):
+            d['objects'].append(self.dump_object(obj))
         return d

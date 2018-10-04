@@ -162,3 +162,13 @@ def test_load_object():
     assert o._parents == [parent_1, parent_2]
     assert parent_1._children == [o]
     assert parent_2._children == [o]
+
+
+def test_dump():
+    d = Database()
+    o1 = d.create_object()
+    o2 = d.create_object()
+    data = d.dump()
+    assert len(data['objects']) == 2
+    assert data['objects'][0]['id'] == o1.id
+    assert data['objects'][1]['id'] == o2.id
