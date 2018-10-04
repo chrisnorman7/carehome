@@ -2,24 +2,19 @@
 
 from datetime import datetime
 from pytest import raises
-import carehome
+from carehome import Object, Property, Database
 from carehome.exc import DuplicateParentError, ParentIsChildError
 
-Object = carehome.Object
-objects = carehome.objects
-Property = carehome.Property
+db = Database()
 
 
 class InvalidType:
     pass
 
 
-def test_max_id():
-    assert carehome.max_id == 0
-
-
 def test_creation():
-    o = Object()
+    o = Object(db)
+    assert o.database is db
     assert o.id is None
     assert o._properties == {}
     assert o._methods == {}
@@ -27,13 +22,10 @@ def test_creation():
     assert o._children == []
     assert o.parents == []
     assert o.children == []
-    o = Object.create()
-    assert objects == {o.id: o}
-    assert carehome.max_id == 1
 
 
 def test_properties():
-    o = Object()
+    o = Object(db)
     o._properties['hello'] = 'world'
     assert o.hello == 'world'
     with raises(AttributeError):
@@ -41,8 +33,8 @@ def test_properties():
 
 
 def test_add_parent():
-    parent = Object()
-    child = Object()
+    parent = Object(db)
+    child = Object(db)
     child.add_parent(parent)
     assert parent in child.parents
     with raises(DuplicateParentError):
@@ -52,8 +44,8 @@ def test_add_parent():
 
 
 def test_properties_inheritance():
-    parent = Object()
-    child = Object()
+    parent = Object(db)
+    child = Object(db)
     child.add_parent(parent)
     parent._properties['hello'] = 'world'
     assert child.hello == 'world'
@@ -64,7 +56,7 @@ def test_properties_inheritance():
 
 
 def test_add_property_valid():
-    o = Object()
+    o = Object(db)
     desc = 'Test property'
     value = 'Hello world'
     p = o.add_property('test', str, value, description=desc)
@@ -75,7 +67,7 @@ def test_add_property_valid():
 
 
 def test_property_invalid():
-    o = Object()
+    o = Object(db)
     with raises(TypeError):
         o.add_property('test1', str, datetime.utcnow())
     with raises(TypeError):
@@ -83,7 +75,7 @@ def test_property_invalid():
 
 
 def test_property_duplicate_name():
-    o = Object()
+    o = Object(db)
     name = 'test'
     value = 'Hello world.'
     o.add_property(name, str, value)
@@ -92,11 +84,11 @@ def test_property_duplicate_name():
 
 
 def test_property_get():
-    parent = Object()
+    parent = Object(db)
     value = datetime.utcnow()
     parent.add_property('date', datetime, value)
     assert parent.date is value
-    child = Object()
+    child = Object(db)
     child.add_parent(parent)
     assert child.date is value
     string = '02/10/2018'
@@ -106,13 +98,13 @@ def test_property_get():
 
 
 def test_add_method():
-    o = Object.create()
+    o = db.create_object()
     o.add_method('test', 'return self')
     assert o.test() is o
 
 
 def test_add_method_anonymous():
-    o = Object()
+    o = Object(db)
     with raises(RuntimeError):
         o.add_method(
             'fails', 'return "This will fail because the object is anonymous."'
@@ -120,7 +112,7 @@ def test_add_method_anonymous():
 
 
 def test_remove_method():
-    o = Object.create()
+    o = db.create_object()
     o.add_method('test', 'return')
     assert callable(o.test)
     o.remove_method('test')

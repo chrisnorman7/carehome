@@ -5,30 +5,26 @@ from enum import Enum
 from attr import attrs, attrib, Factory
 from .exc import DuplicateParentError, ParentIsChildError
 
-max_id = 0
-objects = {}
+
+@attrs
+class _Base:
+    """Add a database attribute to objects and properties."""
+
+    database = attrib()
 
 
 @attrs
-class Object:
+class Object(_Base):
     """An object with multiple parents and multiple children."""
 
     _parents = attrib(default=Factory(list))
     _children = attrib(default=Factory(list))
     _methods = attrib(default=Factory(dict))
     _properties = attrib(default=Factory(dict))
-    id = attrib(default=Factory(type(None)), init=False)
+    id = attrib(default=Factory(type(None)))
 
-    @classmethod
-    def create(cls):
-        """Create an object that will be added to the dictionary of objects."""
-        global max_id
-        self = cls()
-        self.id = max_id
-        max_id += 1
-        objects[self.id] = self
+    def __attrs_post_init__(self):
         self.__initialised__ = True
-        return self
 
     def __setattr__(self, name, value):
         if '__initialised__' not in self.__dict__:
@@ -41,11 +37,6 @@ class Object:
             self.add_property(
                 name, type(value), value, description='Added by __setattr__.'
             )
-
-    def destroy(self):
-        for parent in self._parents:
-            parent.remove_parent(self)
-        objects.remove(self)
 
     @property
     def parents(self):
@@ -149,7 +140,7 @@ class Object:
         if self.id is None:
             raise RuntimeError('Methods cannot be added to anonymous objects.')
         code = 'self = objects[%d]\n%s' % (self.id, code)
-        m = Method(name, description, args, imports, code)
+        m = Method(self.database, name, description, args, imports, code)
         self._methods[name] = m
         return m
 
@@ -191,7 +182,7 @@ class Property:
 
 
 @attrs
-class Method:
+class Method(_Base):
     """An Object method."""
 
     name = attrib()
@@ -203,6 +194,8 @@ class Method:
 
     def __attrs_post_init__(self):
         g = globals().copy()
+        g['database'] = self.database
+        g['objects'] = self.database.objects
         code = '\n'.join(self.imports)
         code += '\ndef %s(%s):\n    """%s"""' % (
             self.name, self.args, self.description
@@ -213,3 +206,25 @@ class Method:
         source = compile(code, 'Method', 'exec')
         eval(source, g)
         self.func = g[self.name]
+
+
+@attrs
+class Database:
+    """A database which holds references to objects, methods to create and
+    destroy them, and the current max ID."""
+
+    objects = attrib(default=Factory(dict), init=False, repr=False)
+    max_id = attrib(default=Factory(int), init=False)
+
+    def create_object(self):
+        """Create an object that will be added to the dictionary of objects."""
+        o = Object(self, id=self.max_id)
+        self.max_id += 1
+        self.objects[o.id] = o
+        return o
+
+    def destroy_object(self, obj):
+        """Destroy an object obj."""
+        for parent in obj._parents:
+            parent.remove_parent(obj)
+        del self.objects[obj.id]
