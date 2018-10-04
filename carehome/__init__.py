@@ -144,11 +144,18 @@ class Object:
         """Add a method to this object. Args should be given as Python code,
         and imports should be a list of import statements. Both will be
         prepended to the function code. This object will be available in the
-        function body as self."""
+        function body as self. Methods can not be added to anonymous
+        objects (those with no IDs)."""
+        if self.id is None:
+            raise RuntimeError('Methods cannot be added to anonymous objects.')
         code = 'self = objects[%d]\n%s' % (self.id, code)
         m = Method(name, description, args, imports, code)
         self._methods[name] = m
         return m
+
+    def remove_method(self, name):
+        """Remove a method from this object."""
+        del self._methods[name]
 
 
 class PropertyTypes(Enum):

@@ -109,3 +109,19 @@ def test_add_method():
     o = Object.create()
     o.add_method('test', 'return self')
     assert o.test() is o
+
+
+def test_add_method_anonymous():
+    o = Object()
+    with raises(RuntimeError):
+        o.add_method(
+            'fails', 'return "This will fail because the object is anonymous."'
+        )
+
+
+def test_remove_method():
+    o = Object.create()
+    o.add_method('test', 'return')
+    assert callable(o.test)
+    o.remove_method('test')
+    assert not hasattr(o, 'test')
