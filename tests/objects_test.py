@@ -129,3 +129,26 @@ def test_set___initialised__():
     o = db.create_object()
     with raises(RuntimeError):
         o.__initialised__ = None
+
+
+def test_ancestors():
+    grandparent_1 = db.create_object()
+    grandparent_2 = db.create_object()
+    grandparent_3 = db.create_object()
+    grandparent_4 = db.create_object()
+    parent_1 = db.create_object()
+    parent_2 = db.create_object()
+    o = db.create_object()
+    assert list(o.ancestors) == []
+    for parent in (parent_1, parent_2):
+        o.add_parent(parent)
+    assert list(o.ancestors) == [parent_1, parent_2]
+    for grandparent in (grandparent_1, grandparent_2):
+        parent_1.add_parent(grandparent)
+    for grandparent in (grandparent_3, grandparent_4):
+        parent_2.add_parent(grandparent)
+    ancestors = list(o.ancestors)
+    assert ancestors == [
+        parent_1, grandparent_1, grandparent_2, parent_2, grandparent_3,
+        grandparent_4
+    ]

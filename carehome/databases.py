@@ -60,6 +60,27 @@ class Database:
             d['code']
         )
 
+    def dump_object(self, obj):
+        """Return Object obj as a dictionary."""
+        return dict(
+            id=obj.id, parents=[parent.id for parent in obj.parents],
+            properties=[
+                self.dump_property(p) for p in obj._properties.values()
+            ],
+            methods=[self.dump_method(m) for m in obj._methods.values()]
+        )
+
+    def load_object(self, d):
+        """Load and return an Object instance from a dictionary d."""
+        o = Object(
+            self, id=d['id'],
+            properties=[self.load_property(p) for p in d['properties']],
+            methods=[self.load_method[m] for m in d['methods']]
+        )
+        for parent in d['parents']:
+            o.add_parent(self.objects[parent])
+        return o
+
     def as_dict(self):
         """Generate a dictionary from this database which can be dumped using
         YAML for example."""

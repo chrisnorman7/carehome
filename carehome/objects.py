@@ -2,6 +2,8 @@
 
 from attr import attrs, attrib, Factory
 from .exc import DuplicateParentError, ParentIsChildError
+from .properties import Property
+from .methods import Method
 
 
 @attrs
@@ -55,7 +57,7 @@ class Object:
         """Return all descendants of this object."""
         for child in self._children:
             yield child
-            for descendant in child.descendants():
+            for descendant in child.descendants:
                 yield descendant
 
     @property
@@ -63,7 +65,7 @@ class Object:
         """Return all the ancestors of this object."""
         for parent in self._parents:
             yield parent
-            for ancestor in parent.ancestors():
+            for ancestor in parent.ancestors:
                 yield ancestor
 
     def add_parent(self, obj):
@@ -147,6 +149,4 @@ class Object:
         del self._methods[name]
 
 
-from .properties import Property  # noqa: E402
 from .property_types import PropertyTypes  # noqa: E402
-from .methods import Method  # noqa: E402
