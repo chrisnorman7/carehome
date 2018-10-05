@@ -188,7 +188,35 @@ def test_dump():
     d = Database()
     o1 = d.create_object()
     o2 = d.create_object()
+    name = 'test'
+    d.register_object(name, o1)
     data = d.dump()
+    assert data['registered_objects'] == {name: o1.id}
     assert len(data['objects']) == 2
     assert data['objects'][0]['id'] == o1.id
     assert data['objects'][1]['id'] == o2.id
+
+
+def test_register_object():
+    d = Database()
+    o = d.create_object()
+    name = 'test'
+    d.register_object(name, o)
+    assert d.registered_objects == {name: o}
+    assert d.test is o
+    o = Object(d)
+    with raises(RuntimeError):
+        d.register_object(name, o)
+
+
+def test_unregister_object():
+    d = Database()
+    o = d.create_object()
+    name = 'test'
+    d.register_object(name, o)
+    d.unregister_object(name)
+    assert not d.registered_objects
+    with raises(AttributeError):
+        print(d.test)
+    with raises(KeyError):
+        d.unregister_object(name)
