@@ -2,6 +2,7 @@
 
 import re
 from datetime import datetime
+from types import MethodType
 from pytest import raises
 from carehome import Database, Object, Property, Method
 from carehome.exc import CantLoadYetError
@@ -93,7 +94,7 @@ def test_load_method():
     o = d.create_object()
     name = 'test'
     description = 'This is a test function.'
-    args = 'a, b'
+    args = 'self, a, b'
     imports = ['import re']
     code = 'return (a, b, re)'
     m = d.load_method(
@@ -109,7 +110,8 @@ def test_load_method():
     assert m.description == description
     assert m.args == args
     assert m.imports == imports
-    code = 'self = objects[%d]\n%s' % (o.id, code)
+    assert isinstance(m.func, MethodType)
+    assert m.func.__self__ is o
     assert m.code == code
     assert m.func(1, 2) == (1, 2, re)
 
@@ -138,7 +140,7 @@ def test_load_object():
     parent_2 = d.create_object()
     p = Property('property', 'Test property.', bool, False)
     m = Method(
-        d, 'method', 'Test method.', 'a, b', ['import re'],
+        d, 'method', 'Test method.', 'self, a, b', ['import re'],
         'return (a, b, re)'
     )
     data = dict(
@@ -149,7 +151,6 @@ def test_load_object():
     assert d.objects[id] is o
     assert d.max_id == (id + 1)
     assert len(o._methods) == 1
-    m.code = 'self = objects[%d]\n%s' % (id, m.code)
     m.func = None
     o._methods[m.name].func = None  # Otherwise they'll never match.
     assert o._methods[m.name] == m

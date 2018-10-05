@@ -1,5 +1,6 @@
 """Provides the Object class."""
 
+from types import MethodType
 from attr import attrs, attrib, Factory
 from .exc import DuplicateParentError, ParentIsChildError
 from .properties import Property
@@ -129,18 +130,21 @@ class Object:
         """Remove a property from this object."""
         del self._properties[name]
 
-    def add_method(self, name, code, args='', imports=(), description=None):
+    def add_method(
+        self, name, code, args='self', imports=(), description=None
+    ):
         """Add a method to this object. Args should be given as Python code,
         and imports should be a list of import statements. Both will be
-        prepended to the function code. This object will be available in the
-        function body as self. Methods can not be added to anonymous
-        objects (those with no IDs)."""
+        prepended to the function code. The first argument must be self or
+        similar, so this object can be available from within the function
+        itself. Methods can not be added to anonymous objects (those with no
+        IDs)."""
         if self.id is None:
             raise RuntimeError('Methods cannot be added to anonymous objects.')
-        code = 'self = objects[%d]\n%s' % (self.id, code)
         m = Method(
             self.database, name, description, args, imports, code
         )
+        m.func = MethodType(m.func, self)
         self._methods[name] = m
         return m
 
