@@ -117,7 +117,7 @@ class Database:
             except CantLoadYetError:
                 objects.append(datum)  # Get it at the end.
         for name, id in d['registered_objects'].items():
-            self.register_objects(name, self.objects[id])
+            self.register_object(name, self.objects[id])
 
     def register_object(self, name, obj):
         """Register an Object instance obj with this database. Once registered,
@@ -137,4 +137,4 @@ class Database:
         try:
             return self.registered_objects[name]
         except KeyError:
-            return super().__getattr__(name)
+            return super().__getattribute__(name)

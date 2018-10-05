@@ -197,6 +197,31 @@ def test_dump():
     assert data['objects'][1]['id'] == o2.id
 
 
+def test_load():
+    d = Database()
+    grandparent_1 = d.create_object()
+    grandparent_2 = d.create_object()
+    parent = d.create_object()
+    for grandparent in (grandparent_1, grandparent_2):
+        parent.add_parent(grandparent)
+    child = d.create_object()
+    child.add_parent(parent)
+    for name, obj in (
+        ('grandparent_1', grandparent_1), ('grandparent_2', grandparent_2),
+        ('parent', parent), ('child', child)
+    ):
+        d.register_object(name, obj)
+    data = d.dump()
+    new = Database()
+    new.load(data)
+    assert d.child.id == child.id
+    assert d.parent.id == parent.id
+    assert d.child._parents == [d.parent]
+    assert d.grandparent_1.id == grandparent_1.id
+    assert d.grandparent_2.id == grandparent_2.id
+    assert d.parent._parents == [d.grandparent_1, d.grandparent_2]
+
+
 def test_register_object():
     d = Database()
     o = d.create_object()
