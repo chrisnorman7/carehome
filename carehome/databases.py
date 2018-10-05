@@ -3,6 +3,7 @@
 from attr import attrs, attrib, Factory, asdict
 from .objects import Object
 from .property_types import PropertyTypes
+from .exc import CantLoadYetError
 
 property_types = {member.value: member.name for member in PropertyTypes}
 
@@ -87,6 +88,14 @@ class Database:
         self.max_id = max(o.id + 1, self.max_id)
         return o
 
+    def maybe_load_object(self, d):
+        """Try and load an Object instance from a dictionary d, but raise
+        CantLoadYetError if its parents haven't yet been loaded."""
+        for parent in d['parents']:
+            if parent not in self.objects:
+                raise CantLoadYetError
+        self.load_object(d)
+
     def dump(self):
         """Generate a dictionary from this database which can be dumped using
         YAML for example."""
@@ -94,3 +103,13 @@ class Database:
         for obj in sorted(self.objects.values(), key=lambda thing: thing.id):
             d['objects'].append(self.dump_object(obj))
         return d
+
+    def load(self, d):
+        """Load objects from a dictionary d."""
+        objects = d['objects']
+        while objects:
+            datum = objects.pop(0)
+            try:
+                self.maybe_load_object(datum)
+            except CantLoadYetError:
+                objects.append(datum)  # Get it at the end.

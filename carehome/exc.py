@@ -19,3 +19,11 @@ class DuplicateChildError(InheritanceError):
 
 class ParentIsChildError(InheritanceError):
     """This parent is already a child of this object."""
+
+
+class DatabaseError(CarehomeError):
+    """There is a problem in the database."""
+
+
+class CantLoadYetError(DatabaseError):
+    """Can't load this object before its parents."""

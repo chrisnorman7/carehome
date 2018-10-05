@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from pytest import raises
 from carehome import Database, Object, Property, Method
+from carehome.exc import CantLoadYetError
 
 
 def test_create():
@@ -162,6 +163,25 @@ def test_load_object():
     assert o._parents == [parent_1, parent_2]
     assert parent_1._children == [o]
     assert parent_2._children == [o]
+
+
+def test_maybe_load_object():
+    d = Database()
+    id = 1
+    data = dict(properties=[], methods=[], parents=[], id=id)
+    d.maybe_load_object(data)
+    assert id in d.objects
+    o = d.objects[id]
+    assert len(d.objects) == 1
+    data['parents'].append(id)
+    id += 1
+    data['id'] = id
+    d.maybe_load_object(data)
+    assert len(d.objects) == 2
+    assert d.objects[id]._parents == [o]
+    data['parents'].append(1234)
+    with raises(CantLoadYetError):
+        d.maybe_load_object(data)
 
 
 def test_dump():
