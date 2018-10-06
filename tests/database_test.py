@@ -230,3 +230,31 @@ def test_dump_objectreference():
     for entry in data['value']:
         assert isinstance(entry, ObjectReference), 'Invalid entry: %r.' % entry
     assert data['value'] == [ObjectReference(f1.id), ObjectReference(f2.id)]
+
+
+def test_dump_value():
+    d = Database()
+    o1 = d.create_object()
+    o2 = d.create_object()
+    data = dict(names=['hello', 'world'], age=25, objects=[o1, o2])
+    res = d.dump_value(data)
+    assert res == dict(
+        names=['hello', 'world'], age=25, objects=[
+            ObjectReference(o1.id), ObjectReference(o2.id)
+        ]
+    )
+
+
+def test_load_value():
+    d = Database()
+    o1 = d.create_object()
+    o2 = d.create_object()
+    data = dict(
+        names=['hello', 'world'], objects=[
+            ObjectReference(o1.id), ObjectReference(o2.id)
+        ], age=29
+    )
+    value = d.load_value(data)
+    assert value == dict(
+        names=['hello', 'world'], objects=[o1, o2], age=29
+    )
