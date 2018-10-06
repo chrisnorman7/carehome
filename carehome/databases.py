@@ -44,7 +44,7 @@ class Database:
     def dump_value(self, value):
         """Return a properly dumped value. Used for converting Object instances
         to ObjectReference instances."""
-        if isinstance(value, Object):
+        if isinstance(value, self.object_class):
             return ObjectReference(value.id)
         elif isinstance(value, list):
             return [self.dump_value(entry) for entry in value]
