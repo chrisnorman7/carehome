@@ -7,6 +7,10 @@ from pytest import raises
 from carehome import Database, Object, Property, Method, ObjectReference
 
 
+class CustomObject(Object):
+    pass
+
+
 def test_create():
     db = Database()
     assert db.objects == {}
@@ -258,3 +262,11 @@ def test_load_value():
     assert value == dict(
         names=['hello', 'world'], objects=[o1, o2], age=29
     )
+
+
+def test_custom_object():
+    d = Database(object_class=CustomObject)
+    o = d.create_object()
+    assert isinstance(o, d.object_class)
+    o = d.load_object(dict(id=1, methods=[]))
+    assert isinstance(o, CustomObject)

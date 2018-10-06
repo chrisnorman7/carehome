@@ -22,10 +22,11 @@ class Database:
     objects = attrib(default=Factory(dict), init=False, repr=False)
     max_id = attrib(default=Factory(int), init=False)
     registered_objects = attrib(default=Factory(dict), init=False, repr=False)
+    object_class = attrib(default=Factory(lambda: Object))
 
     def create_object(self):
         """Create an object that will be added to the dictionary of objects."""
-        o = Object(self, id=self.max_id)
+        o = self.object_class(self, id=self.max_id)
         self.attach_object(o)
         return o
 
@@ -115,7 +116,7 @@ class Database:
 
     def load_object(self, d):
         """Load and return an Object instance from a dictionary d."""
-        o = Object(self, id=d['id'])
+        o = self.object_class(self, id=d['id'])
         self.attach_object(o)
         self.max_id = max(o.id + 1, self.max_id)
         for data in d['methods']:
