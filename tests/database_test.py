@@ -4,8 +4,7 @@ import re
 from datetime import datetime
 from types import MethodType
 from pytest import raises
-from carehome import Database, Object, Property, Method
-from carehome.exc import CantLoadYetError
+from carehome import Database, Object, Property, Method, ObjectReference
 
 
 def test_create():
@@ -136,8 +135,6 @@ def test_dump_object():
 def test_load_object():
     d = Database()
     id = 18
-    parent_1 = d.create_object()
-    parent_2 = d.create_object()
     p = Property('property', 'Test property.', bool, False)
     m = Method(
         d, 'method', 'Test method.', 'self, a, b', ['import re'],
@@ -154,35 +151,9 @@ def test_load_object():
     m.func = None
     o._methods[m.name].func = None  # Otherwise they'll never match.
     assert o._methods[m.name] == m
-    assert len(o._properties) == 1
-    assert o._properties[p.name] == p
+    assert not o._properties
     assert not o._parents
     assert not o._children
-    d.destroy_object(o)
-    data['parents'].extend([parent_1.id, parent_2.id])
-    o = d.load_object(data)
-    assert o._parents == [parent_1, parent_2]
-    assert parent_1._children == [o]
-    assert parent_2._children == [o]
-
-
-def test_maybe_load_object():
-    d = Database()
-    id = 1
-    data = dict(properties=[], methods=[], parents=[], id=id)
-    d.maybe_load_object(data)
-    assert id in d.objects
-    o = d.objects[id]
-    assert len(d.objects) == 1
-    data['parents'].append(id)
-    id += 1
-    data['id'] = id
-    d.maybe_load_object(data)
-    assert len(d.objects) == 2
-    assert d.objects[id]._parents == [o]
-    data['parents'].append(1234)
-    with raises(CantLoadYetError):
-        d.maybe_load_object(data)
 
 
 def test_dump():
@@ -246,3 +217,16 @@ def test_unregister_object():
         print(d.test)
     with raises(KeyError):
         d.unregister_object(name)
+
+
+def test_dump_objectreference():
+    d = Database()
+    f1 = d.create_object()
+    f2 = d.create_object()
+    o = d.create_object()
+    p = o.add_property('friends', list, [f1, f2])
+    assert p.value == [f1, f2]
+    data = d.dump_property(p)
+    for entry in data['value']:
+        assert isinstance(entry, ObjectReference), 'Invalid entry: %r.' % entry
+    assert data['value'] == [ObjectReference(f1.id), ObjectReference(f2.id)]

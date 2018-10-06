@@ -3,9 +3,15 @@
 from attr import attrs, attrib, Factory, asdict
 from .objects import Object
 from .property_types import PropertyTypes
-from .exc import CantLoadYetError
 
 property_types = {member.value: member.name for member in PropertyTypes}
+
+
+@attrs
+class ObjectReference:
+    """A reference to an object. used when dumping and loading properties."""
+
+    id = attrib()
 
 
 @attrs
@@ -34,20 +40,51 @@ class Database:
             parent.remove_parent(obj)
         del self.objects[obj.id]
 
+    def dump_value(self, value):
+        """Return a properly dumped value. Used for converting Object instances
+        to ObjectReference instances."""
+        if isinstance(value, Object):
+            return ObjectReference(value.id)
+        elif isinstance(value, list):
+            return [self.dump_value(entry) for entry in value]
+        elif isinstance(value, dict):
+            return {
+                self.dump_value(x): self.dump_value(y) for x, y in
+                value.items()
+            }
+        else:
+            return value
+
     def dump_property(self, p):
         """Return Property p as a dictionary."""
-        d = asdict(p)
-        d['type'] = property_types.get(d['type'], None)
+        d = dict(
+            type=property_types.get(p.type, None), name=p.name,
+            description=p.description, value=self.dump_value(p.value)
+        )
         if d['type'] is None:
             raise RuntimeError('Invalid type on property %r.' % p)
         return d
+
+    def load_value(self, value):
+        """Returns a loaded value."""
+        if isinstance(value, ObjectReference):
+            return self.objects[value.id]
+        elif isinstance(value, list):
+            return [self.load_value(entry) for entry in value]
+        elif isinstance(value, dict):
+            return {
+                self.load_value(x): self.load_value(y) for x, y
+                in value.items()
+            }
+        else:
+            return value
 
     def load_property(self, obj, d):
         """Load and return a Property instance bound to an Object instance obj,
         from a dictionary d."""
         return obj.add_property(
-            d['name'], getattr(PropertyTypes, d['type']).value, d['value'],
-            description=d['description']
+            d['name'], getattr(PropertyTypes, d['type']).value,
+            self.load_value(d['value']), description=d['description']
         )
 
     def dump_method(self, m):
@@ -80,22 +117,10 @@ class Database:
         """Load and return an Object instance from a dictionary d."""
         o = Object(self, id=d['id'])
         self.attach_object(o)
-        for p in d['properties']:
-            self.load_property(o, p)
-        for m in d['methods']:
-            self.load_method(o, m)
-        for parent in d['parents']:
-            o.add_parent(self.objects[parent])
         self.max_id = max(o.id + 1, self.max_id)
+        for data in d['methods']:
+            self.load_method(o, data)
         return o
-
-    def maybe_load_object(self, d):
-        """Try and load an Object instance from a dictionary d, but raise
-        CantLoadYetError if its parents haven't yet been loaded."""
-        for parent in d['parents']:
-            if parent not in self.objects:
-                raise CantLoadYetError
-        self.load_object(d)
 
     def dump(self):
         """Generate a dictionary from this database which can be dumped using
@@ -110,14 +135,30 @@ class Database:
     def load(self, d):
         """Load objects from a dictionary d."""
         objects = d['objects']
-        while objects:
-            datum = objects.pop(0)
-            try:
-                self.maybe_load_object(datum)
-            except CantLoadYetError:
-                objects.append(datum)  # Get it at the end.
+        for data in objects:
+            self.load_object(data)
+        # All objects are now partially loaded without properties or parents.
+        # Let's load the rest.
+        for data in objects:
+            obj = self.objects[data['id']]
+            for datum in data['properties']:
+                self.load_property(obj, datum)
+            for id in data['parents']:
+                obj.add_parent(self.objects[id])
         for name, id in d['registered_objects'].items():
             self.register_object(name, self.objects[id])
+        for obj in self.objects.values():
+            # Go through all properties and check their values for
+            # ObjectReference instances.
+            for p in obj._properties.values():
+                if p.type is list:
+                    p.value = [self.objects[x.id] if isinstance(
+                        x, ObjectReference
+                    ) else x for x in p.value]
+                elif p.type is dict:
+                    p.value = {key: self.objects[x.id] if isinstance(
+                        x, ObjectReference
+                    ) else x for key, x in p.value.items()}
 
     def register_object(self, name, obj):
         """Register an Object instance obj with this database. Once registered,

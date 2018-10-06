@@ -23,7 +23,3 @@ class ParentIsChildError(InheritanceError):
 
 class DatabaseError(CarehomeError):
     """There is a problem in the database."""
-
-
-class CantLoadYetError(DatabaseError):
-    """Can't load this object before its parents."""

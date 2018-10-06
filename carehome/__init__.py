@@ -5,9 +5,11 @@ from .objects import Object
 from .properties import Property
 from .property_types import PropertyTypes
 from .methods import Method
-from .databases import Database
+from .databases import Database, ObjectReference
 
 __all__ = []
 
-for thing in (Object, Property, Method, Database, PropertyTypes):
+for thing in (
+    Object, Property, Method, Database, PropertyTypes, ObjectReference
+):
     __all__.append(thing.__name__)
