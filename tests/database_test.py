@@ -270,3 +270,18 @@ def test_custom_object():
     assert isinstance(o, d.object_class)
     o = d.load_object(dict(id=1, methods=[]))
     assert isinstance(o, CustomObject)
+
+
+def test_dump_value_object_class():
+    d = Database(object_class=CustomObject)
+    o = d.create_object()
+    value = d.dump_value(o)
+    assert isinstance(value, ObjectReference)
+
+
+def test_load_value_object_class():
+    d = Database(object_class=CustomObject)
+    o = d.create_object()
+    assert isinstance(o, CustomObject)
+    value = d.load_value(ObjectReference(o.id))
+    assert value is o
