@@ -6,6 +6,8 @@ from .exc import DuplicateParentError, ParentIsChildError
 from .properties import Property
 from .methods import Method
 
+NoneType = type(None)
+
 
 @attrs
 class Object:
@@ -120,7 +122,7 @@ class Object:
                 break
         else:
             raise TypeError('Invalid property type: %r.' % type)
-        if not isinstance(value, type):
+        if not isinstance(value, (NoneType, type)):
             raise TypeError('Value %r is not of type %r.' % (value, type))
         p = Property(name, description, type, value)
         self._properties[name] = p

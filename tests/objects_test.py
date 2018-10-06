@@ -66,7 +66,7 @@ def test_add_property_valid():
     assert p.description == desc
 
 
-def test_property_invalid():
+def test_add_property_invalid():
     o = Object(db)
     with raises(TypeError):
         o.add_property('test1', str, datetime.utcnow())
@@ -74,7 +74,15 @@ def test_property_invalid():
         o.add_property('test2', InvalidType, 'Hello world.')
 
 
-def test_property_duplicate_name():
+def test_add_property_null():
+    o = Object(db)
+    p = o.add_property('location', Object, None)
+    assert p.value is None
+    assert p.name == 'location'
+    assert p.type is Object
+
+
+def test_add_property_duplicate_name():
     o = Object(db)
     name = 'test'
     value = 'Hello world.'
