@@ -35,3 +35,5 @@ def test_set():
     value = 'Some other value.'
     p.set(value)
     assert p.value is value
+    p.set(None)
+    assert p.value is None

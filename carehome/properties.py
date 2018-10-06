@@ -2,6 +2,8 @@
 
 from attr import attrs, attrib
 
+NoneType = type(None)
+
 
 @attrs
 class Property:
@@ -16,7 +18,7 @@ class Property:
         return self.value
 
     def set(self, value):
-        if not isinstance(value, self.type):
+        if not isinstance(value, (NoneType, self.type)):
             raise TypeError(
                 'Type mismatch for property %r. Value: %r.' % (self, value)
             )
