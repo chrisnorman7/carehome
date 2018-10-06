@@ -175,6 +175,13 @@ class Database:
         the given name, so it is no longer available as an attribute."""
         del self.registered_objects[name]
 
+    def clear_method_cache(self):
+        """Iterate through all objects and clear their method caches. This can
+        conserve space, and should probably be run periodically on systems
+        where methods change frequently."""
+        for obj in self.objects.values():
+            obj._method_cache.clear()
+
     def __getattr__(self, name):
         try:
             return self.registered_objects[name]

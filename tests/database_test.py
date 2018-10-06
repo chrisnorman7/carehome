@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime
-from types import MethodType
+from types import FunctionType
 from pytest import raises
 from carehome import Database, Object, Property, Method, ObjectReference
 
@@ -113,10 +113,9 @@ def test_load_method():
     assert m.description == description
     assert m.args == args
     assert m.imports == imports
-    assert isinstance(m.func, MethodType)
-    assert m.func.__self__ is o
+    assert isinstance(m.func, FunctionType)
     assert m.code == code
-    assert m.func(1, 2) == (1, 2, re)
+    assert m.func(o, 1, 2) == (1, 2, re)
 
 
 def test_dump_object():
@@ -285,3 +284,20 @@ def test_load_value_object_class():
     assert isinstance(o, CustomObject)
     value = d.load_value(ObjectReference(o.id))
     assert value is o
+
+
+def test_clear_func_cache():
+    d = Database()
+    parent = d.create_object()
+    parent.add_method('test1', 'return 1')
+    child = d.create_object()
+    child.add_method('test2', 'return 2')
+    child.add_parent(parent)
+    parent.test1()
+    assert len(parent._method_cache) == 1
+    child.test1()
+    child.test2()
+    assert len(child._method_cache) == 2
+    d.clear_method_cache()
+    assert not parent._method_cache
+    assert not child._method_cache

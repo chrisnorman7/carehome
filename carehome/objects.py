@@ -19,6 +19,7 @@ class Object:
     _methods = attrib(default=Factory(dict))
     _properties = attrib(default=Factory(dict))
     id = attrib(default=Factory(type(None)))
+    _method_cache = attrib(default=Factory(dict), init=False, repr=False)
 
     def __attrs_post_init__(self):
         self.__initialised__ = True
@@ -93,25 +94,31 @@ class Object:
             d.update(dictionary)
         for name, value in d.items():
             if name == attribute:
-                if isinstance(value, Property):
-                    return value.get()
-                elif isinstance(value, Method):
-                    return value.func
-                else:
-                    return value
+                return value
         raise AttributeError(attribute)
 
     def __getattr__(self, name, *args, **kwargs):
         """Find a property or method matching the given name."""
         try:
-            return self.method_or_property(name)
+            value = self.method_or_property(name)
         except AttributeError:
-            for parent in self._parents:
+            for ancestor in self.ancestors:
                 try:
-                    return getattr(parent, name)
+                    value = ancestor.method_or_property(name)
+                    break
                 except AttributeError:
                     pass
-            return super().__getattribute__(name, *args, **kwargs)
+            else:
+                return super().__getattribute__(name, *args, **kwargs)
+        if isinstance(value, Property):
+            return value.get()
+        elif isinstance(value, Method):
+            num = id(value.func)
+            if num not in self._method_cache:
+                self._method_cache[num] = MethodType(value.func, self)
+            return self._method_cache[num]
+        else:
+            return value
 
     def add_property(self, name, type, value, description=None):
         """Add a property to this Object."""
@@ -146,7 +153,6 @@ class Object:
         m = Method(
             self.database, name, description, args, imports, code
         )
-        m.func = MethodType(m.func, self)
         self._methods[name] = m
         return m
 

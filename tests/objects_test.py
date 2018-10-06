@@ -1,6 +1,7 @@
 """Test objects."""
 
 from datetime import datetime
+from types import MethodType, FunctionType
 from pytest import raises
 from carehome import Object, Property, Database
 from carehome.exc import DuplicateParentError, ParentIsChildError
@@ -206,3 +207,29 @@ def test_descendants():
     assert descendants == [
         parent_1, child_1, child_2, parent_2, child_3, child_4
     ]
+
+
+def test_get_method():
+    parent = db.create_object()
+    m = parent.add_method('this', 'return self')
+    assert isinstance(m.func, FunctionType)
+    assert isinstance(parent.this, MethodType)
+    assert parent.this.__self__ is parent
+    assert parent.this() is parent
+    child = db.create_object()
+    child.add_parent(parent)
+    assert isinstance(child.this, MethodType)
+    assert child.this is not parent.this
+    assert child.this.__self__ is child
+    assert child.this() is child
+
+
+def test_method_cache():
+    o = db.create_object()
+    m = o.add_method('test', 'return 1')
+    assert o.test() == 1
+    assert o._method_cache == {id(m.func): o.test}
+    o.remove_method('test')
+    m = o.add_method('test', 'return 2')
+    assert o.test() == 2
+    assert o._method_cache[id(m.func)] is o.test
