@@ -24,7 +24,7 @@ class Database:
     property_types = attrib(default=Factory(lambda: property_types.copy()))
 
     def __attrs_post_init__(self):
-        self.property_types['object'] = self.object_class
+        self.property_types['obj'] = self.object_class
 
     def create_object(self, *parents):
         """Create an object that will be added to the dictionary of objects.

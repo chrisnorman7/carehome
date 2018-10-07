@@ -128,7 +128,11 @@ class Object:
             if cls is type:
                 break
         else:
-            raise TypeError('Invalid property type: %r.' % type)
+            raise TypeError(
+                'Invalid property type for %r.%s (value=%r): %r.' % (
+                    self, name, value, type
+                )
+            )
         if not isinstance(value, (NoneType, type)):
             raise TypeError('Value %r is not of type %r.' % (value, type))
         p = Property(name, description, type, value)
