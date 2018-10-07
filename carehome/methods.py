@@ -26,6 +26,6 @@ class Method:
         for line in self.code.splitlines():
             code += '\n    '
             code += line
-        source = compile(code, 'Method', 'exec')
+        source = compile(code, f'<Method {self.name}>', 'exec')
         eval(source, g)
         self.func = g[self.name]
