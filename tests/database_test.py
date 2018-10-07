@@ -301,3 +301,13 @@ def test_clear_func_cache():
     d.clear_method_cache()
     assert not parent._method_cache
     assert not child._method_cache
+
+
+def test_create_object_with_parents():
+    d = Database()
+    parent_1 = d.create_object()
+    parent_2 = d.create_object()
+    child = d.create_object(parent_1, parent_2)
+    assert not parent_1.parents
+    assert not parent_2.parents
+    assert child.parents == [parent_1, parent_2]

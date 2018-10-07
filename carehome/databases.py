@@ -24,10 +24,13 @@ class Database:
     registered_objects = attrib(default=Factory(dict), init=False, repr=False)
     object_class = attrib(default=Factory(lambda: Object))
 
-    def create_object(self):
-        """Create an object that will be added to the dictionary of objects."""
+    def create_object(self, *parents):
+        """Create an object that will be added to the dictionary of objects.
+        This object will have all the provided parents added to it."""
         o = self.object_class(self, id=self.max_id)
         self.attach_object(o)
+        for parent in parents:
+            o.add_parent(parent)
         return o
 
     def attach_object(self, o):
