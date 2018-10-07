@@ -311,3 +311,21 @@ def test_create_object_with_parents():
     assert not parent_1.parents
     assert not parent_2.parents
     assert child.parents == [parent_1, parent_2]
+
+
+def test_property_types():
+    d = Database()
+    assert d.property_types['object'] is Object
+    d = Database(object_class=CustomObject)
+    assert d.property_types['object'] is CustomObject
+    o = d.create_object()
+    o.this = o
+    assert o._properties['this'].type is d.object_class
+
+
+def test_dump_property_custom_object():
+    d = Database(object_class=CustomObject)
+    o = d.create_object()
+    p = o.add_property('this', d.object_class, o)
+    value = d.dump_property(p)
+    assert value['type'] == 'object'

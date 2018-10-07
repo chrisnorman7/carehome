@@ -124,8 +124,8 @@ class Object:
         """Add a property to this Object."""
         if name in self._properties:
             raise NameError('Duplicate property name: %r.' % name)
-        for item in PropertyTypes:
-            if item.value is type:
+        for cls in self.database.property_types.values():
+            if cls is type:
                 break
         else:
             raise TypeError('Invalid property type: %r.' % type)
@@ -159,6 +159,3 @@ class Object:
     def remove_method(self, name):
         """Remove a method from this object."""
         del self._methods[name]
-
-
-from .property_types import PropertyTypes  # noqa: E402

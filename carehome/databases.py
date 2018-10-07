@@ -2,9 +2,7 @@
 
 from attr import attrs, attrib, Factory, asdict
 from .objects import Object
-from .property_types import PropertyTypes
-
-property_types = {member.value: member.name for member in PropertyTypes}
+from .property_types import property_types
 
 
 @attrs
@@ -23,6 +21,10 @@ class Database:
     max_id = attrib(default=Factory(int), init=False)
     registered_objects = attrib(default=Factory(dict), init=False, repr=False)
     object_class = attrib(default=Factory(lambda: Object))
+    property_types = attrib(default=Factory(lambda: property_types.copy()))
+
+    def __attrs_post_init__(self):
+        self.property_types['object'] = self.object_class
 
     def create_object(self, *parents):
         """Create an object that will be added to the dictionary of objects.
@@ -61,9 +63,10 @@ class Database:
 
     def dump_property(self, p):
         """Return Property p as a dictionary."""
+        pt = {y: x for x, y in self.property_types.items()}
         d = dict(
-            type=property_types.get(p.type, None), name=p.name,
-            description=p.description, value=self.dump_value(p.value)
+            type=pt.get(p.type, None), name=p.name, description=p.description,
+            value=self.dump_value(p.value)
         )
         if d['type'] is None:
             raise RuntimeError('Invalid type on property %r.' % p)
@@ -87,7 +90,7 @@ class Database:
         """Load and return a Property instance bound to an Object instance obj,
         from a dictionary d."""
         return obj.add_property(
-            d['name'], getattr(PropertyTypes, d['type']).value,
+            d['name'], self.property_types.get(d['type']),
             self.load_value(d['value']), description=d['description']
         )
 
