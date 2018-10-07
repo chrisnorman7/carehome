@@ -148,18 +148,6 @@ class Database:
                 obj.add_parent(self.objects[id])
         for name, id in d['registered_objects'].items():
             self.register_object(name, self.objects[id])
-        for obj in self.objects.values():
-            # Go through all properties and check their values for
-            # ObjectReference instances.
-            for p in obj._properties.values():
-                if p.type is list:
-                    p.value = [self.objects[x.id] if isinstance(
-                        x, ObjectReference
-                    ) else x for x in p.value]
-                elif p.type is dict:
-                    p.value = {key: self.objects[x.id] if isinstance(
-                        x, ObjectReference
-                    ) else x for key, x in p.value.items()}
 
     def register_object(self, name, obj):
         """Register an Object instance obj with this database. Once registered,
