@@ -252,3 +252,19 @@ def test_invalid_event():
     o = db.create_object()
     with raises(NoSuchEventError):
         o.do_event('test_event')
+
+
+def test_try_event_valid():
+    o = db.create_object()
+    o.add_method(
+        'on_event', 'return (self, args, kwargs)', args='self, *args, **kwargs'
+    )
+    self, args, kwargs = o.try_event('on_event', 1, 2, 3, hello='world')
+    assert self is o
+    assert args == (1, 2, 3)
+    assert kwargs == {'hello': 'world'}
+
+
+def test_try_event_invalid():
+    o = db.create_object()
+    assert o.try_event('test_event') is None

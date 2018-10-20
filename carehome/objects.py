@@ -168,3 +168,11 @@ class Object:
         if name not in self.methods:
             raise NoSuchEventError(self, name, args, kwargs)
         return getattr(self, name)(*args, **kwargs)
+
+    def try_event(self, name, *args, **kwargs):
+        """Tries to run the given event. The return value is either None if the
+        event is not present, or the return value of the vent method."""
+        try:
+            return self.do_event(name, *args, **kwargs)
+        except NoSuchEventError:
+            pass
