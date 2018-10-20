@@ -42,8 +42,9 @@ class Database:
 
     def destroy_object(self, obj):
         """Destroy an object obj."""
+        obj.try_event('on_destroy')
         for parent in obj._parents:
-            parent.remove_parent(obj)
+            obj.remove_parent(parent)
         del self.objects[obj.id]
 
     def dump_value(self, value):

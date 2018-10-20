@@ -46,6 +46,22 @@ def test_destroy_object():
     assert db.max_id == 3
 
 
+def test_destroy_object_with_parents():
+    d = Database()
+    g = d.create_object()
+    p = d.create_object(g)
+    # I know we've done these inheritence tests elsewhere, I just feel more
+    # secure knowing they're in two separate places.
+    assert g.children == [p]
+    assert p.parents == [g]
+    c = d.create_object(p)
+    assert c.parents == [p]
+    assert p.children == [c]
+    d.destroy_object(c)
+    assert not p.children
+    assert g.children == [p]
+
+
 def test_dump_property():
     d = Database()
     name = 'test'

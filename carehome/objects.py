@@ -23,6 +23,7 @@ class Object:
 
     def __attrs_post_init__(self):
         self.__initialised__ = True
+        self.try_event('on_init')
 
     def __setattr__(self, name, value):
         if '__initialised__' not in self.__dict__:
