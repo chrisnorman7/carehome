@@ -23,3 +23,7 @@ class ParentIsChildError(InheritanceError):
 
 class DatabaseError(CarehomeError):
     """There is a problem in the database."""
+
+
+class NoSuchEventError(CarehomeError):
+    """No such event."""

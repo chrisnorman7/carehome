@@ -2,7 +2,7 @@
 
 from types import MethodType
 from attr import attrs, attrib, Factory
-from .exc import DuplicateParentError, ParentIsChildError
+from .exc import DuplicateParentError, ParentIsChildError, NoSuchEventError
 from .properties import Property
 from .methods import Method
 
@@ -163,3 +163,8 @@ class Object:
     def remove_method(self, name):
         """Remove a method from this object."""
         del self._methods[name]
+
+    def do_event(self, name, *args, **kwargs):
+        if name not in self.methods:
+            raise NoSuchEventError(self, name, args, kwargs)
+        return getattr(self, name)(*args, **kwargs)
