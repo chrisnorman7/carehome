@@ -139,16 +139,21 @@ def test_dump_object():
     parent_1 = d.create_object()
     parent_2 = d.create_object()
     assert d.dump_object(parent_1) == dict(
-        id=parent_1.id, parents=[], properties=[], methods=[]
+        location=None, id=parent_1.id, parents=[], properties=[], methods=[]
     )
     o = d.create_object()
     for parent in (parent_1, parent_2):
         o.add_parent(parent)
     actual = d.dump_object(o)
     expected = dict(
-        id=o.id, properties=[], methods=[], parents=[parent_1.id, parent_2.id]
+        location=None, id=o.id, properties=[], methods=[],
+        parents=[parent_1.id, parent_2.id]
     )
     assert actual == expected
+    parent_2.location = parent_1
+    res = d.dump_object(parent_2)
+    assert 'location' not in res['properties']
+    assert res['location'] == parent_1.id
 
 
 def test_load_object():

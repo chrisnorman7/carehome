@@ -20,25 +20,32 @@ class Object:
     _properties = attrib(default=Factory(dict))
     id = attrib(default=Factory(type(None)))
     _method_cache = attrib(default=Factory(dict), init=False, repr=False)
+    _location = attrib(default=Factory(NoneType))
 
     def __attrs_post_init__(self):
         self.__initialised__ = True
 
     def __setattr__(self, name, value):
-        if '__initialised__' not in self.__dict__:
+        initialised = '__initialised__' in self.__dict__
+        reserved_names = ('__initialised__', 'id')
+        d1 = self.__dict__
+        d2 = type(self).__dict__
+        if initialised and name in reserved_names:
+                raise RuntimeError(
+                    'You cannot set this attribute after initialisation.'
+                )
+        if not initialised or (name in d1 or name in d2):
             return super().__setattr__(name, value)
-        if name in ('__initialised__', 'id'):
-            raise RuntimeError(
-                'You cannot set this attribute after initialisation.'
-            )
-        for property_name, property in self._properties.items():
-            if property_name == name:
-                property.set(value)
-                break
         else:
-            self.add_property(
-                name, type(value), value, description='Added by __setattr__.'
-            )
+            for property_name, property in self._properties.items():
+                if property_name == name:
+                    property.set(value)
+                    break
+            else:
+                self.add_property(
+                    name, type(value), value,
+                    description='Added by __setattr__.'
+                )
 
     @property
     def parents(self):
@@ -71,6 +78,29 @@ class Object:
             yield parent
             for ancestor in parent.ancestors:
                 yield ancestor
+
+    @property
+    def location(self):
+        if self._location is not None:
+            return self.database.objects[self.location]
+
+    @location.setter
+    def location(self, obj):
+        """Set the location of this object to a destination where. Note that
+        where must either be an Object instance, or None, which means
+        nowhere."""
+        if self._location is not None:
+            self.location.try_event('on_exit', self)
+        if obj is None:
+            value = None
+        else:
+            obj.try_event('on_enter', self)
+            value = obj.id
+        self.__dict__['_location'] = value
+
+        @property
+        def contents(self):
+            return [x for x in self.database.objects if x.location is self]
 
     def add_parent(self, obj):
         """Add a parent to this object."""

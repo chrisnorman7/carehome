@@ -26,10 +26,15 @@ class Database:
     def __attrs_post_init__(self):
         self.property_types['obj'] = self.object_class
 
+    def new_id(self):
+        """Get a unique ID and increment self.max_id."""
+        self.max_id += 1
+        return self.max_id - 1
+
     def create_object(self, *parents):
         """Create an object that will be added to the dictionary of objects.
         This object will have all the provided parents added to it."""
-        o = self.object_class(self, id=self.max_id)
+        o = self.object_class(self, id=self.new_id())
         self.attach_object(o)
         for parent in parents:
             o.add_parent(parent)
@@ -93,7 +98,8 @@ class Database:
         from a dictionary d."""
         return obj.add_property(
             d['name'], self.property_types.get(d['type']),
-            self.load_value(d['value']), description=d['description']
+            self.load_value(d.get('value', None)),
+            description=d.get('description', None)
         )
 
     def dump_method(self, m):
@@ -108,15 +114,16 @@ class Database:
         """Load and return a Method instance bound to Object instance obj, from
         a dictionary d."""
         return obj.add_method(
-            d['name'], d['code'], args=d['args'], imports=d['imports'],
-            description=d['description']
+            d['name'], d['code'], args=d.get('args', 'self'),
+            imports=d.get('imports', []),
+            description=d.get('description', None)
         )
 
     def dump_object(self, obj):
         """Return Object obj as a dictionary."""
         return dict(
             id=obj.id, parents=[parent.id for parent in obj.parents],
-            properties=[
+            location=obj._location, properties=[
                 self.dump_property(p) for p in obj._properties.values()
             ],
             methods=[self.dump_method(m) for m in obj._methods.values()]
@@ -124,9 +131,9 @@ class Database:
 
     def load_object(self, d):
         """Load and return an Object instance from a dictionary d."""
-        o = self.object_class(self, id=d['id'])
+        o = self.object_class(self, id=d.get('id', self.max_id))
+        o._location = d.get('location', None)
         self.attach_object(o)
-        self.max_id = max(o.id + 1, self.max_id)
         for data in d['methods']:
             self.load_method(o, data)
         return o
