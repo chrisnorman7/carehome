@@ -69,3 +69,32 @@ def test_on_destroy():
     with raises(DestroyError):
         db.destroy_object(o)
     assert o.id in db.objects
+
+
+def test_on_exit():
+    loc = db.create_object()
+    loc.add_method('on_exit', 'self.last_left = thing', args='self, thing')
+    thing = db.create_object()
+    thing.location = loc
+    assert not loc.properties
+    thing.location = None
+    assert loc.last_left is thing
+    other = db.create_object()
+    other.location = loc
+    assert loc.last_left is thing
+    other.location = None
+    assert loc.last_left is other
+
+
+def test_on_enter():
+    loc = db.create_object()
+    loc.add_method('on_enter', 'self.last_entered = thing', args='self, thing')
+    assert not loc.properties
+    thing = db.create_object()
+    thing.location = loc
+    assert loc.last_entered is thing
+    assert loc.contents == [thing]
+    other = db.create_object()
+    other.location = loc
+    assert loc.last_entered is other
+    assert loc.contents == [thing, other]

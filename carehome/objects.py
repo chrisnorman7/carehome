@@ -100,7 +100,8 @@ class Object:
 
     @property
     def contents(self):
-        return [x for x in self.database.objects.values() if x.location is self]
+        objects = self.database.objects.values()
+        return [x for x in objects if x.location is self]
 
     def add_parent(self, obj):
         """Add a parent to this object."""
