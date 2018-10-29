@@ -9,6 +9,10 @@ from carehome.exc import DuplicateParentError, ParentIsChildError
 db = Database()
 
 
+class CustomObject(Object):
+    pass
+
+
 class InvalidType:
     pass
 
@@ -253,3 +257,15 @@ def test_location():
     thing.location = None
     assert thing.location is None
     assert not loc.contents
+
+
+def test_location_custom_object():
+    db = Database(object_class=CustomObject)
+    loc = db.create_object()
+    assert isinstance(loc, CustomObject)
+    obj = db.create_object()
+    assert isinstance(obj, CustomObject)
+    obj.location = loc
+    assert obj.location is loc
+    assert obj._location == loc.id
+    assert loc.contents == [obj]

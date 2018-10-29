@@ -28,13 +28,13 @@ class Object:
     def __setattr__(self, name, value):
         initialised = '__initialised__' in self.__dict__
         reserved_names = ('__initialised__', 'id')
-        d1 = self.__dict__
-        d2 = type(self).__dict__
         if initialised and name in reserved_names:
                 raise RuntimeError(
                     'You cannot set this attribute after initialisation.'
                 )
-        if not initialised or (name in d1 or name in d2):
+        if not initialised or (
+            hasattr(self, name) or hasattr(type(self), name)
+        ):
             return super().__setattr__(name, value)
         else:
             for property_name, property in self._properties.items():
