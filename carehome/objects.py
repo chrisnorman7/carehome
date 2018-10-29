@@ -33,7 +33,7 @@ class Object:
                     'You cannot set this attribute after initialisation.'
                 )
         if not initialised or (
-            hasattr(self, name) or hasattr(type(self), name)
+            name in self.__dict__ or name in dir(self.database.object_class)
         ):
             return super().__setattr__(name, value)
         else:
