@@ -4,9 +4,7 @@ from datetime import datetime
 from types import MethodType, FunctionType
 from pytest import raises
 from carehome import Object, Property, Database
-from carehome.exc import (
-  DuplicateParentError, ParentIsChildError, NoSuchEventError
-)
+from carehome.exc import DuplicateParentError, ParentIsChildError
 
 db = Database()
 
@@ -235,36 +233,3 @@ def test_method_cache():
     m = o.add_method('test', 'return 2')
     assert o.test() == 2
     assert o._method_cache[id(m.func)] is o.test
-
-
-def test_valid_event():
-    o = db.create_object()
-    o.add_method(
-        'on_event', 'return (self, args, kwargs)', args='self, *args, **kwargs'
-    )
-    self, args, kwargs = o.do_event('on_event', 1, 2, 3, hello='world')
-    assert self is o
-    assert args == (1, 2, 3)
-    assert kwargs == {'hello': 'world'}
-
-
-def test_invalid_event():
-    o = db.create_object()
-    with raises(NoSuchEventError):
-        o.do_event('test_event')
-
-
-def test_try_event_valid():
-    o = db.create_object()
-    o.add_method(
-        'on_event', 'return (self, args, kwargs)', args='self, *args, **kwargs'
-    )
-    self, args, kwargs = o.try_event('on_event', 1, 2, 3, hello='world')
-    assert self is o
-    assert args == (1, 2, 3)
-    assert kwargs == {'hello': 'world'}
-
-
-def test_try_event_invalid():
-    o = db.create_object()
-    assert o.try_event('test_event') is None

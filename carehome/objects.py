@@ -23,7 +23,6 @@ class Object:
 
     def __attrs_post_init__(self):
         self.__initialised__ = True
-        self.try_event('on_init')
 
     def __setattr__(self, name, value):
         if '__initialised__' not in self.__dict__:
@@ -166,9 +165,10 @@ class Object:
         del self._methods[name]
 
     def do_event(self, name, *args, **kwargs):
-        if name not in self.methods:
-            raise NoSuchEventError(self, name, args, kwargs)
-        return getattr(self, name)(*args, **kwargs)
+        """Call the named event with the given args and kwargs."""
+        if callable(getattr(self, name, None)):
+            return getattr(self, name)(*args, **kwargs)
+        raise NoSuchEventError(self, name, args, kwargs)
 
     def try_event(self, name, *args, **kwargs):
         """Tries to run the given event. The return value is either None if the

@@ -33,6 +33,7 @@ class Database:
         self.attach_object(o)
         for parent in parents:
             o.add_parent(parent)
+        o.try_event('on_init')
         return o
 
     def attach_object(self, o):
