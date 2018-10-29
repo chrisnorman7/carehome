@@ -134,7 +134,7 @@ class Database:
         o = self.object_class(self, id=d.get('id', self.max_id))
         o._location = d.get('location', None)
         self.attach_object(o)
-        for data in d['methods']:
+        for data in d.get('methods', []):
             self.load_method(o, data)
         return o
 

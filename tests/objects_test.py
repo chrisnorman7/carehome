@@ -233,3 +233,23 @@ def test_method_cache():
     m = o.add_method('test', 'return 2')
     assert o.test() == 2
     assert o._method_cache[id(m.func)] is o.test
+
+
+def test_location():
+    loc = db.create_object()
+    assert loc.location is None
+    assert not loc.contents
+    aside = db.create_object(loc)
+    assert aside.location is None
+    assert not aside.contents
+    # Creating a new object shouldn't affect any previously-loaded objects.
+    assert loc.location is None
+    assert not loc.contents
+    thing = db.create_object()
+    thing.location = loc
+    assert loc.contents == [thing]
+    assert thing.location is loc
+    assert thing._location == loc.id
+    thing.location = None
+    assert thing.location is None
+    assert not loc.contents

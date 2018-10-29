@@ -82,7 +82,7 @@ class Object:
     @property
     def location(self):
         if self._location is not None:
-            return self.database.objects[self.location]
+            return self.database.objects[self._location]
 
     @location.setter
     def location(self, obj):
@@ -98,9 +98,9 @@ class Object:
             value = obj.id
         self.__dict__['_location'] = value
 
-        @property
-        def contents(self):
-            return [x for x in self.database.objects if x.location is self]
+    @property
+    def contents(self):
+        return [x for x in self.database.objects.values() if x.location is self]
 
     def add_parent(self, obj):
         """Add a parent to this object."""

@@ -178,6 +178,9 @@ def test_load_object():
     assert not o._properties
     assert not o._parents
     assert not o._children
+    data = dict(id=1, location=2)
+    o = d.load_object(data)
+    assert o._location == 2
 
 
 def test_dump():
