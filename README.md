@@ -12,9 +12,22 @@ Called when the object is initialised.
 #### Arguments
 None
 
-#### on_destroy
+### on_destroy
 Called before the object is destroyed, and the object is still valid.
 
 #### Arguments
 None
 
+### on_enter
+Called before an object enters another one.
+
+#### Arguments
+
+* The thing which is moving into this object.
+
+### on_exit
+Called before an object exits another.
+
+#### Arguments
+
+* The object which is leaving.
