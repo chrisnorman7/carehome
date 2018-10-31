@@ -17,7 +17,7 @@ class Method:
 
     def __attrs_post_init__(self):
         g = globals().copy()
-        g['database'] = self.database
+        g.update(**self.database.method_globals)
         g['objects'] = self.database.objects
         code = '\n'.join(self.imports)
         code += '\ndef %s(%s):\n    """%s"""' % (

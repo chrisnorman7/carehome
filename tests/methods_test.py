@@ -5,6 +5,7 @@ from types import FunctionType
 from carehome import Method, Database
 
 db = Database()
+inserted_global = object()
 
 
 def test_init():
@@ -30,3 +31,10 @@ def test_args():
 def test_imports():
     m = Method(db, 'test', 'Test re.', '', ['import re'], 'return re')
     assert m.func() is re
+
+
+def test_method_globals():
+    db = Database(method_globals=dict(g=inserted_global))
+    o = db.create_object()
+    o.add_method('get_g', 'return g')
+    assert o.get_g() is inserted_global

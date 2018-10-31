@@ -15,6 +15,7 @@ def test_create():
     db = Database()
     assert db.objects == {}
     assert db.max_id == 0
+    assert db.method_globals == {'database': db}
 
 
 def test_create_object():

@@ -22,8 +22,11 @@ class Database:
     registered_objects = attrib(default=Factory(dict), init=False, repr=False)
     object_class = attrib(default=Factory(lambda: Object))
     property_types = attrib(default=Factory(lambda: property_types.copy()))
+    method_globals = attrib(default=Factory(type(None)))
 
     def __attrs_post_init__(self):
+        if self.method_globals is None:
+            self.method_globals = dict(database=self)
         self.property_types['obj'] = self.object_class
 
     def new_id(self):
