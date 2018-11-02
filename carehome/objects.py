@@ -108,7 +108,7 @@ class Object:
         assert isinstance(obj, type(self))
         if obj in self.descendants:
             raise ParentIsChildError(self, obj)
-        if obj in self.ancestors:
+        if obj in self.ancestors or obj is self:
             raise DuplicateParentError(self, obj)
         self._parents.append(obj)
         obj._children.append(self)

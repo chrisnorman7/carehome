@@ -44,6 +44,8 @@ def test_add_parent():
     assert parent in child.parents
     with raises(DuplicateParentError):
         child.add_parent(parent)
+    with raises(DuplicateParentError):
+        child.add_parent(child)
     with raises(ParentIsChildError):
         parent.add_parent(child)
 
