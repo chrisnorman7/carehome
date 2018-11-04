@@ -63,6 +63,16 @@ def test_destroy_object_with_parents():
     assert g.children == [p]
 
 
+def test_destroy_object_registered():
+    d = Database()
+    first = d.create_object()
+    d.register_object('first', first)
+    second = d.create_object()
+    d.register_object('second', second)
+    d.destroy_object(first)
+    assert d.registered_objects == dict(second=second)
+
+
 def test_dump_property():
     d = Database()
     name = 'test'

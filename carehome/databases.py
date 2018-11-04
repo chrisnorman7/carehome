@@ -55,6 +55,10 @@ class Database:
         for parent in obj._parents:
             obj.remove_parent(parent)
         del self.objects[obj.id]
+        for name, value in self.registered_objects.items():
+            if value is obj:
+                del self.registered_objects[name]
+                break
 
     def dump_value(self, value):
         """Return a properly dumped value. Used for converting Object instances
