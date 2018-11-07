@@ -99,3 +99,4 @@ ENV/
 .pytest_cache
 AUTHORS
 ChangeLog
+methods

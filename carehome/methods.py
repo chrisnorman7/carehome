@@ -1,5 +1,7 @@
 """Provides the Method class."""
 
+import os
+import os.path
 from attr import attrs, attrib, Factory
 
 
@@ -26,6 +28,15 @@ class Method:
         for line in self.code.splitlines():
             code += '\n    '
             code += line
-        source = compile(code, f'<Method {self.name}>', 'exec')
+        n = self.get_filename()
+        with open(n, 'w') as f:
+            f.write(code)
+        source = compile(code, n, 'exec')
         eval(source, g)
         self.func = g[self.name]
+
+    def get_filename(self):
+        """Get a unique filename for this method."""
+        return os.path.join(
+            self.database.methods_dir, '%s-%d.method' % (self.name, id(self))
+        )
