@@ -15,7 +15,7 @@ def test_create():
     db = Database()
     assert db.objects == {}
     assert db.max_id == 0
-    assert db.method_globals == {'database': db}
+    assert db.method_globals == {'database': db, 'objects': db.objects}
     assert db.methods_dir == 'methods'
 
 
@@ -107,16 +107,10 @@ def test_load_property():
 def test_dump_method():
     d = Database()
     name = 'test'
-    description = 'Test method for dumping.'
-    args = ''
-    imports = []
-    code = 'return 1234'
-    m = Method(d, name, description, args, imports, code)
+    code = 'def %s(self):\n    return 1234' % name
+    m = Method(d, code)
     actual = d.dump_method(m)
-    expected = dict(
-        name=name, description=description, args=args, imports=imports,
-        code=code
-    )
+    expected = dict(name=name, code=code)
     assert actual == expected
 
 
@@ -124,23 +118,12 @@ def test_load_method():
     d = Database()
     o = d.create_object()
     name = 'test'
-    description = 'This is a test function.'
-    args = 'self, a, b'
-    imports = ['import re']
-    code = 'return (a, b, re)'
-    m = d.load_method(
-        o, dict(
-            name=name, description=description, args=args, imports=imports,
-            code=code
-        )
-    )
+    code = 'import re\ndef %s(self, a, b):\n    return (a, b, re)' % name
+    m = d.load_method(o, dict(name=name, code=code))
     assert isinstance(m, Method)
     assert o._methods[name] is m
     assert m.database is d
     assert m.name == name
-    assert m.description == description
-    assert m.args == args
-    assert m.imports == imports
     assert isinstance(m.func, FunctionType)
     assert m.code == code
     assert m.func(o, 1, 2) == (1, 2, re)
@@ -172,10 +155,7 @@ def test_load_object():
     d = Database()
     id = 18
     p = Property('property', 'Test property.', bool, False)
-    m = Method(
-        d, 'method', 'Test method.', 'self, a, b', ['import re'],
-        'return (a, b, re)'
-    )
+    m = Method(d, 'import re\ndef method(self, a, b):\n    return (a, b, re)')
     data = dict(
         id=id, methods=[d.dump_method(m)], properties=[d.dump_property(p)],
         parents=[]
@@ -325,9 +305,9 @@ def test_load_value_object_class():
 def test_clear_func_cache():
     d = Database()
     parent = d.create_object()
-    parent.add_method('test1', 'return 1')
+    parent.add_method('def test1(self):\n    return 1')
     child = d.create_object()
-    child.add_method('test2', 'return 2')
+    child.add_method('def test2(self):\n    return 2')
     child.add_parent(parent)
     parent.test1()
     assert len(parent._method_cache) == 1

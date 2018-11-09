@@ -23,7 +23,7 @@ methods.DestroyError = DestroyError
 def test_valid_event():
     o = db.create_object()
     o.add_method(
-        'on_event', 'return (self, args, kwargs)', args='self, *args, **kwargs'
+        'def on_event(self, *args, **kwargs):\n    return (self, args, kwargs)'
     )
     self, args, kwargs = o.do_event('on_event', 1, 2, 3, hello='world')
     assert self is o
@@ -40,7 +40,7 @@ def test_invalid_event():
 def test_try_event_valid():
     o = db.create_object()
     o.add_method(
-        'on_event', 'return (self, args, kwargs)', args='self, *args, **kwargs'
+        'def on_event(self, *args, **kwargs):\n    return (self, args, kwargs)'
     )
     self, args, kwargs = o.try_event('on_event', 1, 2, 3, hello='world')
     assert self is o
@@ -55,7 +55,7 @@ def test_try_event_invalid():
 
 def test_on_init():
     p = db.create_object()
-    p.add_method('on_init', 'raise InitError()')
+    p.add_method('def on_init(self):\n    raise InitError()')
     with raises(InitError):
         p.on_init()
     assert 'on_init' in p.methods
@@ -65,7 +65,7 @@ def test_on_init():
 
 def test_on_destroy():
     o = db.create_object()
-    o.add_method('on_destroy', 'raise DestroyError()')
+    o.add_method('def on_destroy(self):\n    raise DestroyError()')
     with raises(DestroyError):
         db.destroy_object(o)
     assert o.id in db.objects
@@ -73,7 +73,7 @@ def test_on_destroy():
 
 def test_on_exit():
     loc = db.create_object()
-    loc.add_method('on_exit', 'self.last_left = thing', args='self, thing')
+    loc.add_method('def on_exit(self, thing):\n    self.last_left = thing')
     thing = db.create_object()
     thing.location = loc
     assert not loc.properties
@@ -88,7 +88,7 @@ def test_on_exit():
 
 def test_on_enter():
     loc = db.create_object()
-    loc.add_method('on_enter', 'self.last_entered = thing', args='self, thing')
+    loc.add_method('def on_enter(self, thing):\n    self.last_entered = thing')
     assert not loc.properties
     thing = db.create_object()
     thing.location = loc

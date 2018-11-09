@@ -32,6 +32,7 @@ class Database:
             os.makedirs(self.methods_dir)
         if self.method_globals is None:
             self.method_globals = dict(database=self)
+        self.method_globals.setdefault('objects', self.objects)
         self.property_types['obj'] = self.object_class
 
     def new_id(self):
@@ -125,11 +126,7 @@ class Database:
     def load_method(self, obj, d):
         """Load and return a Method instance bound to Object instance obj, from
         a dictionary d."""
-        return obj.add_method(
-            d['name'], d['code'], args=d.get('args', 'self'),
-            imports=d.get('imports', []),
-            description=d.get('description', None)
-        )
+        return obj.add_method(d['code'], d.get('name', None))
 
     def dump_object(self, obj):
         """Return Object obj as a dictionary."""

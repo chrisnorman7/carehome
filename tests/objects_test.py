@@ -114,7 +114,7 @@ def test_property_get():
 
 def test_add_method():
     o = db.create_object()
-    o.add_method('test', 'return self')
+    o.add_method('def test(self):\n    return self')
     assert o.test() is o
 
 
@@ -128,7 +128,7 @@ def test_add_method_anonymous():
 
 def test_remove_method():
     o = db.create_object()
-    o.add_method('test', 'return')
+    o.add_method('def test(self):\n    return')
     assert callable(o.test)
     o.remove_method('test')
     assert not hasattr(o, 'test')
@@ -217,7 +217,7 @@ def test_descendants():
 
 def test_get_method():
     parent = db.create_object()
-    m = parent.add_method('this', 'return self')
+    m = parent.add_method('def this(self):\n    return self')
     assert isinstance(m.func, FunctionType)
     assert isinstance(parent.this, MethodType)
     assert parent.this.__self__ is parent
@@ -232,11 +232,11 @@ def test_get_method():
 
 def test_method_cache():
     o = db.create_object()
-    m = o.add_method('test', 'return 1')
+    m = o.add_method('def test(self):\n    return 1')
     assert o.test() == 1
     assert o._method_cache == {id(m.func): o.test}
     o.remove_method('test')
-    m = o.add_method('test', 'return 2')
+    m = o.add_method('def test(self):\n    return 2')
     assert o.test() == 2
     assert o._method_cache[id(m.func)] is o.test
 

@@ -174,21 +174,15 @@ class Object:
         """Remove a property from this object."""
         del self._properties[name]
 
-    def add_method(
-        self, name, code, args='self', imports=(), description=None
-    ):
-        """Add a method to this object. Args should be given as Python code,
-        and imports should be a list of import statements. Both will be
-        prepended to the function code. The first argument must be self or
-        similar, so this object can be available from within the function
-        itself. Methods can not be added to anonymous objects (those with no
-        IDs)."""
+    def add_method(self, *args, **kwargs):
+        """Add a method to this object. All arguments are passed to the Method
+        constructor. The first method argument must be self or similar, so this
+        object can be available from within the function itself. Methods can
+        not be added to anonymous objects (those with no IDs)."""
         if self.id is None:
             raise RuntimeError('Methods cannot be added to anonymous objects.')
-        m = Method(
-            self.database, name, description, args, imports, code
-        )
-        self._methods[name] = m
+        m = Method(self.database, *args, **kwargs)
+        self._methods[m.name] = m
         return m
 
     def remove_method(self, name):
