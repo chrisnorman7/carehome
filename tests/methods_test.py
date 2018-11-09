@@ -3,6 +3,7 @@
 import re
 from inspect import isclass, isfunction
 from types import FunctionType
+from pytest import raises
 from carehome import Method, Database
 
 db = Database()
@@ -86,3 +87,8 @@ def test_method_guess_name():
     m = Method(db, 'def f():\n    return 1234')
     assert m.name == 'f'
     assert m.func() == 1234
+
+
+def test_no_func():
+    with raises(RuntimeError):
+        Method(db, 'import sys')
