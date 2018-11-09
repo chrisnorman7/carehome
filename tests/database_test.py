@@ -165,6 +165,8 @@ def test_load_object():
     assert d.max_id == (id + 1)
     assert len(o._methods) == 1
     m.func = None
+    for method in (m, o._methods[m.name]):
+        method.created.clear()
     o._methods[m.name].func = None  # Otherwise they'll never match.
     assert o._methods[m.name] == m
     assert not o._properties

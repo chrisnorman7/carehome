@@ -1,11 +1,29 @@
 """Test the Method class."""
 
 import re
+from inspect import isclass, isfunction
 from types import FunctionType
 from carehome import Method, Database
 
 db = Database()
 inserted_global = object()
+
+code = """
+class Thing:
+    pass
+
+
+def f1():
+    return 1
+
+
+def f2():
+    return 2
+
+
+def f():
+    return (Thing, f1, f2)
+"""
 
 
 def test_init():
@@ -48,3 +66,23 @@ def test_method_globals():
     o = db.create_object()
     o.add_method('def get_g(self):\n    return g')
     assert o.get_g() is inserted_global
+
+
+def test_created():
+    m = Method(db, code, name='f')
+    Thing, f1, f2 = m.func()
+    # Make sure the right stuff has been returned.
+    assert isclass(Thing)
+    assert isfunction(f1)
+    assert isfunction(f2)
+    assert f1() == 1
+    assert f2() == 2
+    assert m.created['Thing'] is Thing
+    assert m.created['f1'] is f1
+    assert m.created['f2'] is f2
+
+
+def test_method_guess_name():
+    m = Method(db, 'def f():\n    return 1234')
+    assert m.name == 'f'
+    assert m.func() == 1234

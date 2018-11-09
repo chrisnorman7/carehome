@@ -2,7 +2,7 @@
 
 import os
 import os.path
-from attr import attrs, attrib, Factory, asdict
+from attr import attrs, attrib, Factory
 from .objects import Object
 from .property_types import property_types
 
@@ -117,11 +117,7 @@ class Database:
 
     def dump_method(self, m):
         """Dump a Method m as a dictionary."""
-        return asdict(
-            m, filter=lambda attribute, value: attribute.name not in (
-                'database', 'func'
-            )
-        )
+        return dict(name=m.name, code=m.code)
 
     def load_method(self, obj, d):
         """Load and return a Method instance bound to Object instance obj, from

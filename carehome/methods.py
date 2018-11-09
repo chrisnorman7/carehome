@@ -16,6 +16,7 @@ class Method:
     code = attrib()
     name = attrib(default=Factory(NoneType))
     func = attrib(default=Factory(NoneType), init=False)
+    created = attrib(default=Factory(dict), init=False)
 
     def __attrs_post_init__(self):
         g = globals().copy()
@@ -26,18 +27,15 @@ class Method:
             f.write(self.code)
         source = compile(self.code, n, 'exec')
         eval(source, g)
+        new_names = set(g.keys())
+        for name in new_names.difference(old_names):
+            f = g[name]
+            self.created[name] = f
+            if self.name is None and isfunction(f):
+                self.name = name
         if self.name is None:
-            new_names = set(g.keys())
-            for name in new_names.difference(old_names):
-                f = g[name]
-                if isfunction(f):
-                    self.name = name
-                    self.func = f
-                    break
-            else:
-                raise RuntimeError('No function found.')
-        else:
-            self.func = g[self.name]
+            raise RuntimeError('No function found.')
+        self.func = self.created[self.name]
 
     def get_filename(self):
         """Get a unique filename for this method."""
