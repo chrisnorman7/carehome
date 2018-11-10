@@ -121,3 +121,6 @@ def test_flake8():
     )
     res = m.validate_code()
     assert res == expected
+    db.method_globals['pretend'] = 1234
+    m = Method(db, 'def f():\n    return pretend\n', name='f')
+    assert m.validate_code() is None
