@@ -1,10 +1,14 @@
 """Test the Method class."""
 
+import os
+import os.path
 import re
 from inspect import isclass, isfunction
 from types import FunctionType
+import flake8
 from pytest import raises
-from carehome import Method, Database
+from carehome import Method, Database, methods
+from carehome.exc import Flake8NotFound
 
 db = Database()
 inserted_global = object()
@@ -40,6 +44,13 @@ def test_init():
     f = m.func
     assert f.__name__ == name
     assert f.__doc__ == description
+
+
+def test_get_filename():
+    m = Method(db, 'def test_filename():\n    print()', name='test_filename')
+    assert os.path.isfile(m.get_filename())
+    with open(m.get_filename(), 'r') as f:
+        assert f.read() == m.code
 
 
 def test_run():
@@ -92,3 +103,21 @@ def test_method_guess_name():
 def test_no_func():
     with raises(RuntimeError):
         Method(db, 'import sys')
+
+
+def test_flake8():
+    assert methods.flake8 is flake8
+    m = Method(db, 'def f():\n    pass')
+    methods.flake8 = None
+    with raises(Flake8NotFound):
+        m.validate_code()
+    methods.flake8 = flake8
+    assert m.validate_code() is None
+    m = Method(db, 'def f():\n    return something\n', name='f')
+    with raises(NameError):
+        m.func()
+    expected = "%s:2:12: F821 undefined name 'something'%s" % (
+        m.get_filename(), os.linesep
+    )
+    res = m.validate_code()
+    assert res == expected

@@ -3,7 +3,13 @@
 import os
 import os.path
 from inspect import isfunction
+from subprocess import run
 from attr import attrs, attrib, Factory
+try:
+    import flake8
+except ImportError:
+    flake8 = None
+from .exc import Flake8NotFound
 
 NoneType = type(None)
 
@@ -42,3 +48,17 @@ class Method:
         return os.path.join(
             self.database.methods_dir, '%s-%d.method' % (self.name, id(self))
         )
+
+    def validate_code(self):
+        """This method by default uses Flake8 to check your code. It should
+        return either None to indicate no errors, or a string containing any
+        problems found."""
+        if flake8 is None:
+            raise Flake8NotFound()
+        builtins = ','.join(self.database.method_globals.keys())
+        p = run(
+            ('flake8', '--builtins=%s' % builtins, self.get_filename()),
+            capture_output=True
+        )
+        if p.returncode:
+            return p.stdout.decode()

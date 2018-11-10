@@ -27,3 +27,7 @@ class DatabaseError(CarehomeError):
 
 class NoSuchEventError(CarehomeError):
     """No such event."""
+
+
+class Flake8NotFound(CarehomeError):
+    """Flake8 not found."""
