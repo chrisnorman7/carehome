@@ -107,7 +107,7 @@ def test_no_func():
 
 def test_flake8():
     assert methods.flake8 is flake8
-    m = Method(db, 'def f():\n    pass')
+    m = Method(db, 'def f():\n    pass\n')
     methods.flake8 = None
     with raises(Flake8NotFound):
         m.validate_code()
@@ -116,9 +116,7 @@ def test_flake8():
     m = Method(db, 'def f():\n    return something\n', name='f')
     with raises(NameError):
         m.func()
-    expected = "%s:2:12: F821 undefined name 'something'%s" % (
-        m.get_filename(), os.linesep
-    )
+    expected = "stdin:2:12: F821 undefined name 'something'%s" % os.linesep
     res = m.validate_code()
     assert res == expected
     db.method_globals['pretend'] = 1234

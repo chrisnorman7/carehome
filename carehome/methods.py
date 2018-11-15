@@ -3,7 +3,7 @@
 import os
 import os.path
 from inspect import isfunction
-from subprocess import run
+from subprocess import Popen, PIPE
 from attr import attrs, attrib, Factory
 try:
     import flake8
@@ -56,9 +56,12 @@ class Method:
         if flake8 is None:
             raise Flake8NotFound()
         builtins = ','.join(self.database.method_globals.keys())
-        p = run(
-            ('flake8', '--builtins=%s' % builtins, self.get_filename()),
-            capture_output=True
+        p = Popen(
+            ('flake8', '--builtins=%s' % builtins, '-'), stdin=PIPE,
+            stdout=PIPE, stderr=PIPE
         )
-        if p.returncode:
-            return p.stdout.decode()
+        stdout, stderr = p.communicate(self.code.encode())
+        if stdout:
+            return stdout.decode()
+        elif stderr:
+            return stderr.decode()
