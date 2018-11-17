@@ -5,6 +5,7 @@ from datetime import datetime
 from types import FunctionType
 from pytest import raises
 from carehome import Database, Object, Property, Method, ObjectReference
+from carehome.exc import LoadPropertyError, LoadMethodError, LoadObjectError
 
 
 class CustomObject(Object):
@@ -104,6 +105,16 @@ def test_load_property():
     assert o._properties[p.name] is p
 
 
+def test_load_property_malformed():
+    d = Database()
+    o = d.create_object()
+    with raises(LoadPropertyError) as err:
+        d.load_property(o, d)
+    assert err.value.args[0] is o
+    assert err.value.args[1] is d
+    assert isinstance(err.value.__cause__, TypeError)
+
+
 def test_dump_method():
     d = Database()
     name = 'test'
@@ -127,6 +138,16 @@ def test_load_method():
     assert isinstance(m.func, FunctionType)
     assert m.code == code
     assert m.func(o, 1, 2) == (1, 2, re)
+
+
+def load_method_malformed():
+    d = Database()
+    o = d.create_object()
+    with raises(LoadMethodError) as err:
+        d.load_metod(o, d)
+    assert err.value.args[0] is o
+    assert err.value.args[1] is d
+    assert isinstance(err.value.__cause__, TypeError)
 
 
 def test_dump_object():
@@ -175,6 +196,14 @@ def test_load_object():
     data = dict(id=1, location=2)
     o = d.load_object(data)
     assert o._location == 2
+
+
+def test_load_object_malformed():
+    d = Database()
+    with raises(LoadObjectError) as err:
+        d.load_object(d)
+    assert err.value.args[0] is d
+    assert isinstance(err.value.__cause__, AttributeError)
 
 
 def test_dump():

@@ -3,6 +3,7 @@
 import os
 import os.path
 from attr import attrs, attrib, Factory
+from .exc import LoadPropertyError, LoadMethodError, LoadObjectError
 from .objects import Object
 from .property_types import property_types
 
@@ -109,11 +110,14 @@ class Database:
     def load_property(self, obj, d):
         """Load and return a Property instance bound to an Object instance obj,
         from a dictionary d."""
-        return obj.add_property(
-            d['name'], self.property_types.get(d['type']),
-            self.load_value(d.get('value', None)),
-            description=d.get('description', None)
-        )
+        try:
+            return obj.add_property(
+                d['name'], self.property_types.get(d['type']),
+                self.load_value(d.get('value', None)),
+                description=d.get('description', None)
+            )
+        except Exception as e:
+            raise LoadPropertyError(obj, d) from e
 
     def dump_method(self, m):
         """Dump a Method m as a dictionary."""
@@ -122,7 +126,10 @@ class Database:
     def load_method(self, obj, d):
         """Load and return a Method instance bound to Object instance obj, from
         a dictionary d."""
-        return obj.add_method(d['code'], d.get('name', None))
+        try:
+            return obj.add_method(d['code'], name=d.get('name', None))
+        except Exception as e:
+            raise LoadMethodError(obj, d) from e
 
     def dump_object(self, obj):
         """Return Object obj as a dictionary."""
@@ -136,7 +143,10 @@ class Database:
 
     def load_object(self, d):
         """Load and return an Object instance from a dictionary d."""
-        o = self.object_class(self, id=d.get('id', self.max_id))
+        try:
+            o = self.object_class(self, id=d.get('id', self.max_id))
+        except Exception as e:
+            raise LoadObjectError(d) from e
         o._location = d.get('location', None)
         self.attach_object(o)
         for data in d.get('methods', []):

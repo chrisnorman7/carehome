@@ -31,3 +31,19 @@ class NoSuchEventError(CarehomeError):
 
 class Flake8NotFound(CarehomeError):
     """Flake8 not found."""
+
+
+class LoadError(CarehomeError):
+    """Error loading something."""
+
+
+class LoadPropertyError(LoadError):
+    """Error loading a property."""
+
+
+class LoadMethodError(LoadError):
+    """Error loading a method."""
+
+
+class LoadObjectError(LoadError):
+    """Error loading an object."""
