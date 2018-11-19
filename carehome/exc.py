@@ -47,3 +47,23 @@ class LoadMethodError(LoadError):
 
 class LoadObjectError(LoadError):
     """Error loading an object."""
+
+
+class DestroyError(CarehomeError):
+    """Error destroying an object."""
+
+
+class ObjectRegisteredError(DestroyError):
+    """Object is registered."""
+
+
+class HasChildrenError(DestroyError):
+    """This object has children."""
+
+
+class HasContentsError(DestroyError):
+    """Object has contents."""
+
+
+class IsValueError(DestroyError):
+    """This object is stored in the property of another object."""

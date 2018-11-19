@@ -5,7 +5,10 @@ from datetime import datetime
 from types import FunctionType
 from pytest import raises
 from carehome import Database, Object, Property, Method, ObjectReference
-from carehome.exc import LoadPropertyError, LoadMethodError, LoadObjectError
+from carehome.exc import (
+    LoadPropertyError, LoadMethodError, LoadObjectError, ObjectRegisteredError,
+    HasChildrenError, HasContentsError, IsValueError
+)
 
 
 class CustomObject(Object):
@@ -65,14 +68,72 @@ def test_destroy_object_with_parents():
     assert g.children == [p]
 
 
+def test_destroy_object_with_children():
+    d = Database()
+    parent = d.create_object()
+    d.create_object(parent)
+    d.create_object(parent)
+    with raises(HasChildrenError) as exc:
+        d.destroy_object(parent)
+    assert exc.value.args[0]is parent
+    for obj in parent.children:
+        obj.remove_parent(parent)
+    d.destroy_object(parent)
+    assert parent.id not in d.objects
+
+
+def test_destroy_object_with_contents():
+    d = Database()
+    room = d.create_object()
+    obj_1 = d.create_object()
+    obj_1.location = room
+    obj_2 = d.create_object()
+    obj_2.location = room
+    with raises(HasContentsError) as exc:
+        d.destroy_object(room)
+    assert exc.value.args[0] is room
+    for obj in room.contents:
+        obj.location = None
+    d.destroy_object(room)
+    assert room.id not in d.objects
+
+
+def test_destroy_stored_object():
+    d = Database()
+    o1 = d.create_object()
+    o2 = d.create_object()
+    p = o1.add_property('prop', d.object_class, o2)
+
+    def inner():
+        """Actually perform the testing."""
+        with raises(IsValueError) as exc:
+            d.destroy_object(o2)
+        obj, prop = exc.value.args
+        assert obj is o1
+        assert prop is p
+
+    inner()
+    p.type = list
+    p.set([1, 2, o2])
+    inner()
+    p.type = dict
+    p.set(dict(obj=o2))
+    inner()
+    p.set(dict(objects=[o1, o2]))
+    inner()
+    p.value = None
+    d.destroy_object(o2)
+    assert o2.id not in d.objects
+
+
 def test_destroy_object_registered():
     d = Database()
     first = d.create_object()
     d.register_object('first', first)
-    second = d.create_object()
-    d.register_object('second', second)
-    d.destroy_object(first)
-    assert d.registered_objects == dict(second=second)
+    with raises(ObjectRegisteredError):
+        d.destroy_object(first)
+    assert d.first is first
+    assert d.objects == {first.id: first}
 
 
 def test_dump_property():

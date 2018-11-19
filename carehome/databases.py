@@ -3,7 +3,10 @@
 import os
 import os.path
 from attr import attrs, attrib, Factory
-from .exc import LoadPropertyError, LoadMethodError, LoadObjectError
+from .exc import (
+    LoadPropertyError, LoadMethodError, LoadObjectError, ObjectRegisteredError,
+    HasChildrenError, HasContentsError, IsValueError
+)
 from .objects import Object
 from .property_types import property_types
 
@@ -56,16 +59,42 @@ class Database:
         self.max_id = max(o.id + 1, self.max_id)
         self.objects[o.id] = o
 
+    def test_value(self, value, obj):
+        """Return True if obj is found somewhere in value."""
+        if value is obj:
+            return True
+        elif isinstance(value, list):
+            for entry in value:
+                if self.test_value(entry, obj):
+                    return True
+            else:
+                return False
+        elif isinstance(value, dict):
+            for name, data in value.items():
+                if self.test_value(data, obj):
+                    return True
+            else:
+                return False
+        else:
+            return False
+
     def destroy_object(self, obj):
         """Destroy an object obj."""
+        for name, value in self.registered_objects.items():
+            if value is obj:
+                raise ObjectRegisteredError(name, value)
+        if obj.children:
+            raise HasChildrenError(obj)
+        if obj.contents:
+            raise HasContentsError(obj)
+        for thing in self.objects.values():
+            for prop in thing._properties.values():
+                if self.test_value(prop.value, obj):
+                    raise IsValueError(thing, prop)
         obj.try_event('on_destroy')
         for parent in obj._parents:
             obj.remove_parent(parent)
         del self.objects[obj.id]
-        for name, value in self.registered_objects.items():
-            if value is obj:
-                del self.registered_objects[name]
-                break
 
     def dump_value(self, value):
         """Return a properly dumped value. Used for converting Object instances
