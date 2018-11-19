@@ -45,9 +45,9 @@ class Database:
         """Create an object that will be added to the dictionary of objects.
         This object will have all the provided parents added to it."""
         o = self.object_class(self, id=self.new_id())
-        self.attach_object(o)
         for parent in parents:
             o.add_parent(parent)
+        self.attach_object(o)
         o.try_event('on_init')
         return o
 
