@@ -271,3 +271,32 @@ def test_location_custom_object():
     assert obj.location is loc
     assert obj._location == loc.id
     assert loc.contents == [obj]
+
+
+def test_find_property():
+    db = Database()
+    parent = db.create_object()
+    name = 'test'
+    value = 'Test value'
+    description = 'Test property for testing purposes.'
+    p = parent.add_property(name, str, value, description=description)
+    o = db.create_object(parent)
+    assert o.find_property(name) is p
+    assert o.find_property('fake') is None
+
+
+def test_property_dynamic_add():
+    db = Database()
+    parent = db.create_object()
+    name = 'test'
+    value = 'Testing'
+    other_value = 'This is a different value.'
+    description = 'Test property.'
+    parent.add_property(name, str, value, description=description)
+    o = db.create_object(parent)
+    o.test = other_value
+    assert o.test == other_value
+    p = o._properties[name]
+    assert p.name == name
+    assert p.value == other_value
+    assert p.description == description

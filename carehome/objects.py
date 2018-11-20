@@ -36,16 +36,17 @@ class Object:
             name in self.__dict__ or name in dir(self.database.object_class)
         ):
             return super().__setattr__(name, value)
+        elif name in self._properties:
+            self._properties[name].set(value)
         else:
-            for property_name, property in self._properties.items():
-                if property_name == name:
-                    property.set(value)
-                    break
+            prop = self.find_property(name)
+            if prop is None:
+                t = type(value)
+                description = 'Added by __setattr__.'
             else:
-                self.add_property(
-                    name, type(value), value,
-                    description='Added by __setattr__.'
-                )
+                t = prop.type
+                description = prop.description
+            self.add_property(name, t, value, description=description)
 
     @property
     def parents(self):
@@ -173,6 +174,14 @@ class Object:
     def remove_property(self, name):
         """Remove a property from this object."""
         del self._properties[name]
+
+    def find_property(self, name):
+        """Fnd a property with the given name and return it."""
+        objects = [self]
+        objects.extend(self.ancestors)
+        for obj in objects:
+            if name in obj.properties:
+                return obj._properties[name]
 
     def add_method(self, *args, **kwargs):
         """Add a method to this object. All arguments are passed to the Method
