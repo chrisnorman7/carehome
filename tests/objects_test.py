@@ -300,3 +300,9 @@ def test_property_dynamic_add():
     assert p.name == name
     assert p.value == other_value
     assert p.description == description
+    o.other = value
+    p = o._properties['other']
+    assert p.name == 'other'
+    assert p.value == value
+    assert p.description == 'Added by __setattr__.'
+    assert p.type is str
