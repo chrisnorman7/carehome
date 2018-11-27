@@ -8,6 +8,8 @@ from .exc import (
     HasChildrenError, HasContentsError, IsValueError
 )
 from .objects import Object
+from .properties import Property
+from .methods import Method
 from .property_types import property_types
 
 
@@ -27,6 +29,8 @@ class Database:
     max_id = attrib(default=Factory(int), init=False)
     registered_objects = attrib(default=Factory(dict), init=False, repr=False)
     object_class = attrib(default=Factory(lambda: Object))
+    property_class = attrib(default=Factory(lambda: Property))
+    method_class = attrib(default=Factory(lambda: Method))
     property_types = attrib(default=Factory(lambda: property_types.copy()))
     method_globals = attrib(default=Factory(type(None)))
     methods_dir = attrib(default=Factory(lambda: 'methods'))

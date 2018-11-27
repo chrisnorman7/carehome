@@ -3,8 +3,6 @@
 from types import MethodType
 from attr import attrs, attrib, Factory
 from .exc import DuplicateParentError, ParentIsChildError, NoSuchEventError
-from .properties import Property
-from .methods import Method
 
 NoneType = type(None)
 
@@ -142,9 +140,9 @@ class Object:
                     pass
             else:
                 return super().__getattribute__(name, *args, **kwargs)
-        if isinstance(value, Property):
+        if isinstance(value, self.database.property_class):
             return value.get()
-        elif isinstance(value, Method):
+        elif isinstance(value, self.database.method_class):
             num = id(value.func)
             if num not in self._method_cache:
                 self._method_cache[num] = MethodType(value.func, self)
@@ -167,7 +165,7 @@ class Object:
             )
         if not isinstance(value, (NoneType, type)):
             raise TypeError('Value %r is not of type %r.' % (value, type))
-        p = Property(name, description, type, value)
+        p = self.database.property_class(name, description, type, value)
         self._properties[name] = p
         return p
 
@@ -190,7 +188,7 @@ class Object:
         not be added to anonymous objects (those with no IDs)."""
         if self.id is None:
             raise RuntimeError('Methods cannot be added to anonymous objects.')
-        m = Method(self.database, *args, **kwargs)
+        m = self.database.method_class(self.database, *args, **kwargs)
         self._methods[m.name] = m
         return m
 

@@ -3,13 +3,21 @@
 from datetime import datetime
 from types import MethodType, FunctionType
 from pytest import raises
-from carehome import Object, Property, Database
+from carehome import Object, Property, Database, Method
 from carehome.exc import DuplicateParentError, ParentIsChildError
 
 db = Database()
 
 
 class CustomObject(Object):
+    pass
+
+
+class CustomProperty(Property):
+    pass
+
+
+class CustomMethod(Method):
     pass
 
 
@@ -98,6 +106,13 @@ def test_add_property_duplicate_name():
         o.add_property(name, type, value)
 
 
+def test_add_property_custom():
+    d = Database(property_class=CustomProperty)
+    o = d.create_object()
+    p = o.add_property('test', str, 'Hopefully works.')
+    assert isinstance(p, CustomProperty)
+
+
 def test_property_get():
     parent = Object(db)
     value = datetime.utcnow()
@@ -124,6 +139,13 @@ def test_add_method_anonymous():
         o.add_method(
             'fails', 'return "This will fail because the object is anonymous."'
         )
+
+
+def test_add_method_custom():
+    d = Database(method_class=CustomMethod)
+    o = d.create_object()
+    m = o.add_method('def test(self):\n    pass\n')
+    assert isinstance(m, CustomMethod)
 
 
 def test_remove_method():

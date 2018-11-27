@@ -21,6 +21,9 @@ def test_create():
     assert db.max_id == 0
     assert db.method_globals == {'database': db, 'objects': db.objects}
     assert db.methods_dir == 'methods'
+    assert db.object_class is Object
+    assert db.property_class is Property
+    assert db.method_class is Method
 
 
 def test_create_object():
