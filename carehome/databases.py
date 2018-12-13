@@ -91,11 +91,11 @@ class Database:
             raise HasChildrenError(obj)
         if obj.contents:
             raise HasContentsError(obj)
+        obj.try_event('on_destroy')
         for thing in self.objects.values():
             for prop in thing._properties.values():
                 if self.test_value(prop.value, obj):
                     raise IsValueError(thing, prop)
-        obj.try_event('on_destroy')
         for parent in obj._parents:
             obj.remove_parent(parent)
         del self.objects[obj.id]
