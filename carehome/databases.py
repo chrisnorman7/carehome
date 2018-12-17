@@ -62,6 +62,7 @@ class Database:
         """Attach an Object instance o to this database."""
         self.max_id = max(o.id + 1, self.max_id)
         self.objects[o.id] = o
+        o.try_event('on_attach', o)
 
     def test_value(self, value, obj):
         """Return True if obj is found somewhere in value."""

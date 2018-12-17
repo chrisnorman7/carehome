@@ -62,20 +62,18 @@ class Object:
     def properties(self):
         return self._properties.keys()
 
-    @property
     def descendants(self):
         """Return all descendants of this object."""
         for child in self._children:
             yield child
-            for descendant in child.descendants:
+            for descendant in child.descendants():
                 yield descendant
 
-    @property
     def ancestors(self):
         """Return all the ancestors of this object."""
         for parent in self._parents:
             yield parent
-            for ancestor in parent.ancestors:
+            for ancestor in parent.ancestors():
                 yield ancestor
 
     @property
@@ -89,11 +87,11 @@ class Object:
         where must either be an Object instance, or None, which means
         nowhere."""
         if self._location is not None:
-            self.location.try_event('on_exit', self)
+            self.location.try_event('on_exit', self.location, self)
         if obj is None:
             value = None
         else:
-            obj.try_event('on_enter', self)
+            obj.try_event('on_enter', obj, self)
             value = obj.id
         self.__dict__['_location'] = value
 
@@ -105,15 +103,19 @@ class Object:
     def add_parent(self, obj):
         """Add a parent to this object."""
         assert isinstance(obj, type(self))
-        if obj in self.descendants:
+        if obj in self.descendants():
             raise ParentIsChildError(self, obj)
-        if obj in self.ancestors or obj is self:
+        if obj in self.ancestors() or obj is self:
             raise DuplicateParentError(self, obj)
+        self.try_event('on_add_parent', self, obj)
+        obj.try_event('on_add_child', obj, self)
         self._parents.append(obj)
         obj._children.append(self)
 
     def remove_parent(self, obj):
         """Remove a parent from this object."""
+        self.try_event('on_remove_parent', self, obj)
+        obj.try_event('on_remove_child', obj, self)
         self._parents.remove(obj)
         obj._children.remove(self)
 
@@ -132,7 +134,7 @@ class Object:
         try:
             value = self.method_or_property(name)
         except AttributeError:
-            for ancestor in self.ancestors:
+            for ancestor in self.ancestors():
                 try:
                     value = ancestor.method_or_property(name)
                     break
@@ -166,17 +168,19 @@ class Object:
         if not isinstance(value, (NoneType, type)):
             raise TypeError('Value %r is not of type %r.' % (value, type))
         p = self.database.property_class(name, description, type, value)
+        self.try_event('on_add_property', self, p)
         self._properties[name] = p
         return p
 
     def remove_property(self, name):
         """Remove a property from this object."""
+        self.try_event('on_remove_property', self, name)
         del self._properties[name]
 
     def find_property(self, name):
         """Fnd a property with the given name and return it."""
         objects = [self]
-        objects.extend(self.ancestors)
+        objects.extend(self.ancestors())
         for obj in objects:
             if name in obj.properties:
                 return obj._properties[name]

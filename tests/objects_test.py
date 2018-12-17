@@ -200,15 +200,15 @@ def test_ancestors():
     parent_1 = db.create_object()
     parent_2 = db.create_object()
     o = db.create_object()
-    assert list(o.ancestors) == []
+    assert list(o.ancestors()) == []
     for parent in (parent_1, parent_2):
         o.add_parent(parent)
-    assert list(o.ancestors) == [parent_1, parent_2]
+    assert list(o.ancestors()) == [parent_1, parent_2]
     for grandparent in (grandparent_1, grandparent_2):
         parent_1.add_parent(grandparent)
     for grandparent in (grandparent_3, grandparent_4):
         parent_2.add_parent(grandparent)
-    ancestors = list(o.ancestors)
+    ancestors = list(o.ancestors())
     assert ancestors == [
         parent_1, grandparent_1, grandparent_2, parent_2, grandparent_3,
         grandparent_4
@@ -223,15 +223,15 @@ def test_descendants():
     child_2 = db.create_object()
     child_3 = db.create_object()
     child_4 = db.create_object()
-    assert list(grandparent.descendants) == []
+    assert list(grandparent.descendants()) == []
     for parent in (parent_1, parent_2):
         parent.add_parent(grandparent)
-    assert list(grandparent.descendants) == [parent_1, parent_2]
+    assert list(grandparent.descendants()) == [parent_1, parent_2]
     for child in (child_1, child_2):
         child.add_parent(parent_1)
     for child in (child_3, child_4):
         child.add_parent(parent_2)
-    descendants = list(grandparent.descendants)
+    descendants = list(grandparent.descendants())
     assert descendants == [
         parent_1, child_1, child_2, parent_2, child_3, child_4
     ]
