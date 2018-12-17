@@ -55,9 +55,9 @@ def test_try_event_invalid():
 
 def test_on_init():
     p = db.create_object()
-    p.add_method('def on_init(self):\n    raise InitError()')
+    p.add_method('def on_init(self, obj):\n    raise InitError()')
     with raises(InitError):
-        p.on_init()
+        p.on_init(p)
     assert 'on_init' in p.methods
     with raises(InitError):
         db.create_object(p)
@@ -65,7 +65,7 @@ def test_on_init():
 
 def test_on_destroy():
     o = db.create_object()
-    o.add_method('def on_destroy(self):\n    raise DestroyError()')
+    o.add_method('def on_destroy(self, obj):\n    raise DestroyError()')
     with raises(DestroyError):
         db.destroy_object(o)
     assert o.id in db.objects

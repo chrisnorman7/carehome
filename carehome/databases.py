@@ -55,7 +55,7 @@ class Database:
         for parent in parents:
             o.add_parent(parent)
         self.attach_object(o)
-        o.try_event('on_init')
+        o.try_event('on_init', o)
         return o
 
     def attach_object(self, o):
@@ -91,7 +91,7 @@ class Database:
             raise HasChildrenError(obj)
         if obj.contents:
             raise HasContentsError(obj)
-        obj.try_event('on_destroy')
+        obj.try_event('on_destroy', obj)
         for thing in self.objects.values():
             for prop in thing._properties.values():
                 if self.test_value(prop.value, obj):
